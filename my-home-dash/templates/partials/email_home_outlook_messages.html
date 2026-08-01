@@ -1,0 +1,33 @@
+{# Home Outlook folder-organizer message list — fetched on demand, not cache-backed #}
+{% set r = result %}
+{% if r.get('error') %}
+  <p class="text-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ r.error }}</p>
+{% elif r.get('messages') %}
+  <div class="d-flex align-items-center gap-3 small text-muted mb-1 ps-1">
+    <span><input type="checkbox" class="form-check-input align-middle" disabled> Move existing</span>
+    <span><input type="checkbox" class="form-check-input mhd-email-organize-checkbox-rule align-middle" disabled> Move + auto-rule</span>
+  </div>
+  <ul class="list-unstyled mb-0 mhd-email-organize-list">
+    {% for msg in r.messages %}
+    <li class="small mb-1 d-flex align-items-start gap-2">
+      <input type="checkbox" class="form-check-input mt-1 mhd-email-organize-checkbox flex-shrink-0"
+             data-address="{{ msg.from_address }}"
+             data-name="{{ msg.from_name }}"
+             data-folder="{{ folder }}"
+             title="Move all existing emails from this sender into a new folder">
+      <input type="checkbox" class="form-check-input mt-1 mhd-email-organize-checkbox mhd-email-organize-checkbox-rule flex-shrink-0"
+             data-address="{{ msg.from_address }}"
+             data-name="{{ msg.from_name }}"
+             data-folder="{{ folder }}"
+             data-create-rule="1"
+             title="Move existing emails AND auto-move all future emails from this sender">
+      <span class="text-truncate">
+        <span class="{{ 'text-body-secondary' if msg.is_read else 'fw-semibold' }}">{{ msg.from_name | truncate(20, true) }}</span>
+        · {{ msg.subject | truncate(36, true) }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="text-muted small mb-0 ps-2">No messages.</p>
+{% endif %}

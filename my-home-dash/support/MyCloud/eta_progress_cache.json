@@ -1,0 +1,28 @@
+{
+    "entries":  [
+                    {
+                        "LogPath":  "C:\\Users\\jpful\\Documents\\robocopy_backup_to_wdblack2.log",
+                        "LogOffset":  580,
+                        "ProcessedBytes":  0,
+                        "StartedAtUtc":  "2026-04-05T05:30:36.0000000Z",
+                        "LastUpdatedUtc":  "2026-04-05T05:30:58.9793381Z",
+                        "ParsedLines":  0
+                    },
+                    {
+                        "LogPath":  "C:\\Users\\jpful\\Documents\\robocopy_myprojects_to_wdblack2.log",
+                        "LogOffset":  0,
+                        "ProcessedBytes":  146310442783,
+                        "StartedAtUtc":  "2026-04-03T14:03:46.0000000Z",
+                        "LastUpdatedUtc":  "2026-04-04T03:11:03.5725021Z",
+                        "ParsedLines":  291828
+                    },
+                    {
+                        "LogPath":  "C:\\Users\\jpful\\Documents\\robocopy_programfiles_to_wdblack2.log",
+                        "LogOffset":  0,
+                        "ProcessedBytes":  17180359750,
+                        "StartedAtUtc":  "2026-04-04T04:47:58.0000000Z",
+                        "LastUpdatedUtc":  "2026-04-04T04:59:05.9671550Z",
+                        "ParsedLines":  9
+                    }
+                ]
+}

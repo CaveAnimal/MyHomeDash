@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}AI Chat | My Home Dash{% endblock %}
+
+{% block content %}
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-primary-emphasis mb-2">AI Chat</div>
+        <h1 class="h3 mb-2">Dedicated chat workspace.</h1>
+        <p class="mb-0 text-body-secondary">This page gives the local Granite assistant a full-width layout without competing with dashboard cards.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+{% include "partials/chat.html" %}
+{% endblock %}

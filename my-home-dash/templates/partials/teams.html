@@ -1,0 +1,62 @@
+{# Teams partial #}
+{% set d = data %}
+<div class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span>
+      <i class="bi bi-microsoft-teams text-primary me-2"></i>
+      <strong>Teams</strong>
+      {% if d.get('dm_count') %}
+        <span class="badge bg-primary ms-2">{{ d.dm_count }} DMs</span>
+      {% endif %}
+    </span>
+    <button class="btn btn-outline-secondary btn-sm"
+            hx-post="/api/refresh/teams"
+            hx-target="#section-teams"
+            hx-swap="innerHTML">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+  <div class="card-body overflow-auto mhd-section-body">
+    {% if d.get('error') %}
+      <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.error }}</div>
+    {% elif d.get('status') == 'pending' %}
+      <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+    {% else %}
+
+      {# Direct Messages #}
+      <p class="small fw-semibold mb-1 text-body-secondary">
+        <i class="bi bi-chat-dots me-1 text-primary"></i>Recent Chats
+      </p>
+      {% if d.get('dms') %}
+        <ul class="list-unstyled mb-3 ps-2">
+          {% for dm in d.dms %}
+          <li class="small mb-2">
+            <span class="fw-semibold">{{ dm.topic | truncate(30) }}</span>
+            <span class="text-muted"> · {{ dm.sender }}</span><br>
+            <span class="text-muted text-truncate d-block" style="max-width:100%">{{ dm.preview }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small mb-3 ps-2">No recent chats.</p>
+      {% endif %}
+
+      {# Channels #}
+      <p class="small fw-semibold mb-1 text-body-secondary">
+        <i class="bi bi-hash me-1 text-info"></i>Channels
+      </p>
+      {% if d.get('channels') %}
+        <ul class="list-unstyled mb-0 ps-2">
+          {% for ch in d.channels %}
+          <li class="small mb-1 text-muted">
+            <i class="bi bi-dot"></i>{{ ch.team }} / <strong>{{ ch.channel }}</strong>
+          </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small mb-0 ps-2">No channel data.</p>
+      {% endif %}
+
+    {% endif %}
+  </div>
+</div>

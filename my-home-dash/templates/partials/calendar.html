@@ -1,0 +1,54 @@
+{# Calendar partial #}
+{% set d = data %}
+<div class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span>
+      <i class="bi bi-calendar-check text-primary me-2"></i>
+      <strong>Calendar</strong>
+      {% if not d.get('error') and d.get('status') != 'pending' %}
+        <span class="badge bg-primary ms-2">{{ d.count }}</span>
+      {% endif %}
+    </span>
+    <button class="btn btn-outline-secondary btn-sm"
+            hx-post="/api/refresh/calendar"
+            hx-target="#section-calendar"
+            hx-swap="innerHTML">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+  <div class="card-body overflow-auto mhd-section-body">
+    {% if d.get('error') %}
+      <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.error }}</div>
+    {% elif d.get('status') == 'pending' %}
+      <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+    {% elif d.get('events') %}
+      <ul class="list-unstyled mb-0">
+        {% for ev in d.events %}
+        <li class="mhd-event-item {% if ev.upcoming %}mhd-upcoming{% endif %} mb-2 pb-2 border-bottom border-secondary-subtle">
+          {% if ev.upcoming %}
+            <span class="badge bg-warning text-dark me-1">Soon</span>
+          {% endif %}
+          {% if ev.is_all_day %}
+            <span class="badge bg-secondary me-1">All day</span>
+          {% endif %}
+          <span class="fw-semibold">{{ ev.subject }}</span><br>
+          <small class="text-muted">
+            {% if not ev.is_all_day %}{{ ev.start }} – {{ ev.end }}{% endif %}
+            {% if ev.location %} · <i class="bi bi-geo-alt"></i> {{ ev.location }}{% endif %}
+          </small>
+          {% if ev.attendees %}
+          <br><small class="text-muted"><i class="bi bi-people me-1"></i>{{ ev.attendees | join(', ') }}</small>
+          {% endif %}
+          {% if ev.has_link %}
+          <a href="{{ ev.online_url }}" target="_blank" class="btn btn-link btn-sm p-0 ms-1">
+            <i class="bi bi-camera-video"></i> Join
+          </a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted small mb-0"><i class="bi bi-check-circle me-1 text-success"></i>No meetings today.</p>
+    {% endif %}
+  </div>
+</div>

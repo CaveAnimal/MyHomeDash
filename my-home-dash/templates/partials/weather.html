@@ -1,0 +1,49 @@
+{# Weather partial — rendered as a compact summary bar #}
+{% set d = data %}
+<div class="card mhd-card mhd-weather-bar">
+  <div class="card-body py-2">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 position-relative mhd-weather-top-row">
+      <div class="d-flex align-items-center gap-3">
+        <span class="section-icon text-warning"><i class="bi bi-sun-fill fs-4"></i></span>
+        <h6 class="card-title mb-0 fw-semibold">Weather</h6>
+      </div>
+
+      {% if d.get('error') %}
+        <span class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.error }}</span>
+      {% elif d.get('status') == 'pending' %}
+        <span class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</span>
+      {% else %}
+        <div class="d-flex align-items-center gap-4 flex-wrap">
+          <span class="fs-5 fw-bold">{{ d.high }}{{ d.units }} <span class="text-muted fw-normal fs-6">/ {{ d.low }}{{ d.units }}</span></span>
+          <span class="text-muted">{{ d.condition }}</span>
+          {% if d.precip_pct is not none %}
+          <span class="text-info"><i class="bi bi-droplet me-1"></i>{{ d.precip_pct }}% precip</span>
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <span class="small text-muted mhd-weather-midnight-label d-none">
+        <span class="mhd-weather-midnight-before"></span> | <span class="mhd-weather-midnight-after"></span>
+      </span>
+
+      <button class="btn btn-outline-secondary btn-sm ms-auto"
+              hx-post="/api/refresh/weather"
+              hx-target="#section-weather"
+              hx-swap="innerHTML"
+              hx-indicator="#weather-spin">
+        <i class="bi bi-arrow-clockwise"></i>
+        <span id="weather-spin" class="htmx-indicator spinner-border spinner-border-sm ms-1"></span>
+      </button>
+    </div>
+
+    {% if d.hourly %}
+    <div class="mhd-weather-hourly mt-2">
+      <canvas class="mhd-weather-hourly-canvas"
+              data-hourly='{{ d.hourly | tojson }}'
+              data-units="{{ d.units }}"
+              role="img"
+              aria-label="Predicted temperature for the next 24 hours"></canvas>
+    </div>
+    {% endif %}
+  </div>
+</div>

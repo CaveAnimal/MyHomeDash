@@ -1,0 +1,123 @@
+# ─────────────────────────────────────────────
+#  MY HOME DASH — User Configuration
+# ─────────────────────────────────────────────
+
+# ── GENERAL ──────────────────────────────────
+timezone: "America/New_York"           # IANA timezone string
+location:
+  city: "New York"
+  lat: 40.7128
+  lon: -74.0060
+
+# ── SCHEDULE ─────────────────────────────────
+schedule:
+  morning_brief_time: "07:30"          # HH:MM — full dashboard refresh
+  intraday_interval_minutes: 90        # Minutes between intra-day updates
+  intraday_start: "09:00"              # HH:MM — first intra-day update
+  intraday_end: "18:00"                # HH:MM — last intra-day update
+  run_days: [0, 1, 2, 3, 4]           # 0=Monday ... 4=Friday
+  holiday_country: "US"                # ISO 3166-1 alpha-2 country code
+
+# ── EMAIL ────────────────────────────────────
+email:
+  max_subjects_per_account: 10         # How many subject lines to show
+  accounts:
+    - id: work_outlook
+      label: "Work Outlook"
+      type: microsoft
+      auth_token: auth/tokens/msal_work.json
+    - id: home_outlook
+      label: "Home Outlook"
+      type: microsoft
+      auth_token: auth/tokens/msal_home.json
+    - id: gmail_1
+      label: "Gmail (Personal)"
+      type: google
+      auth_token: auth/tokens/google_gmail1.json
+    - id: gmail_2
+      label: "Gmail (Secondary)"
+      type: google
+      auth_token: auth/tokens/google_gmail2.json
+
+# ── CALENDAR ─────────────────────────────────
+calendar:
+  account: work_outlook                # Which email account has the calendar
+  days_ahead: 0                        # 0 = today only; 1 = today + tomorrow
+
+# ── GITHUB ───────────────────────────────────
+github:
+  show_commits: true
+  show_prs: true
+  show_issues: true
+  show_notifications: true
+  max_items_per_section: 5
+
+# ── TEAMS ────────────────────────────────────
+teams:
+  show_channels: true
+  show_direct_messages: true
+  max_items: 10
+
+# ── WEATHER ──────────────────────────────────
+weather:
+  units: "imperial"                    # imperial (°F) or metric (°C)
+  sources:
+    - open_meteo                       # No API key required
+    - openweathermap                   # Requires OPENWEATHERMAP_API_KEY
+    - weatherapi                       # Requires WEATHERAPI_KEY
+
+# ── NEWS ─────────────────────────────────────
+news:
+  max_stories: 7
+  max_age_hours: 24
+  sources:
+    - label: "TechCrunch AI"
+      url: "https://techcrunch.com/category/artificial-intelligence/feed/"
+    - label: "MIT Tech Review"
+      url: "https://www.technologyreview.com/feed/"
+    - label: "The Verge AI"
+      url: "https://www.theverge.com/ai-artificial-intelligence/rss/index.xml"
+    - label: "Wired AI"
+      url: "https://www.wired.com/feed/category/artificial-intelligence/latest/rss"
+    - label: "Reuters Tech"
+      url: "https://feeds.reuters.com/reuters/technologyNews"
+
+# ── DASHBOARD ───────────────────────────────
+dashboard:
+  # Hidden until the related integrations are fully configured.
+  enabled_sections:
+    - weather
+    - calendar
+    - email
+    - github
+    - news
+  home_sections:
+    - weather
+    - calendar
+    - email
+    - github
+
+# ── LOCAL LLM ───────────────────────────────
+llm:
+  base_url: "http://127.0.0.1:11434"
+  model: "granite3.3:8b"
+  timeout_seconds: 90
+  keep_alive: "10m"
+  temperature: 0.2
+  max_history_messages: 10
+  system_prompt: "You are the assistant for My Home Dash. Keep responses concise, helpful, and practical."
+  internet_access:
+    enabled: true
+    manual_prefixes: ["web:", "search:", "lookup:"]
+    allow_duckduckgo: true
+    allow_direct_url_fetch: true
+    timeout_seconds: 8
+    max_context_chars: 1600
+    max_related_topics: 4
+
+# ── DISPLAY ──────────────────────────────────
+display:
+  theme: "light"                       # dark or light
+  show_section_timestamps: true
+  date_format: "%A, %B %#d %Y"        # e.g. "Monday, March 1 2026"  (Windows: %#d strips padding)
+  time_format: "%I:%M %p"              # e.g. "07:30 AM"

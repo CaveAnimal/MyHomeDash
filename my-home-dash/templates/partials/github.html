@@ -1,0 +1,119 @@
+{# GitHub partial #}
+{% set d = data %}
+<div class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span>
+      <i class="bi bi-github me-2"></i>
+      <strong>GitHub</strong>
+      {% if d.get('username') %}
+        <span class="text-muted small ms-1">{{ d.username }}</span>
+      {% endif %}
+    </span>
+    <button class="btn btn-outline-secondary btn-sm"
+            hx-post="/api/refresh/github"
+            hx-target="#section-github"
+            hx-swap="innerHTML">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+  <div class="card-body overflow-auto mhd-section-body">
+    {% if d.get('error') %}
+      <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.error }}</div>
+    {% elif d.get('status') == 'pending' %}
+      <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+    {% else %}
+
+      {# Open PRs #}
+      <div class="mb-2">
+        <p class="small fw-semibold mb-1 text-body-secondary">
+          <i class="bi bi-git me-1 text-warning"></i>Open PRs
+          <span class="badge bg-warning text-dark ms-1">{{ d.pr_count | default(0) }}</span>
+        </p>
+        {% if d.get('pr_error') %}
+          <p class="text-warning small mb-0 ps-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.pr_error }}</p>
+        {% elif d.get('open_prs') %}
+          <ul class="list-unstyled mb-0 ps-2">
+            {% for pr in d.open_prs %}
+            <li class="small mb-1">
+              <a href="{{ pr.url }}" target="_blank" class="text-decoration-none text-body">{{ pr.title | truncate(50) }}</a>
+              <span class="text-muted"> · {{ pr.repo.split('/')[1] if '/' in pr.repo else pr.repo }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0 ps-2">No open PRs.</p>
+        {% endif %}
+      </div>
+
+      <hr class="my-2 border-secondary-subtle">
+
+      {# Assigned Issues #}
+      <div class="mb-2">
+        <p class="small fw-semibold mb-1 text-body-secondary">
+          <i class="bi bi-exclamation-circle me-1 text-danger"></i>Assigned Issues
+          <span class="badge bg-danger ms-1">{{ d.issue_count | default(0) }}</span>
+        </p>
+        {% if d.get('issue_error') %}
+          <p class="text-warning small mb-0 ps-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.issue_error }}</p>
+        {% elif d.get('assigned_issues') %}
+          <ul class="list-unstyled mb-0 ps-2">
+            {% for issue in d.assigned_issues %}
+            <li class="small mb-1">
+              <a href="{{ issue.url }}" target="_blank" class="text-decoration-none text-body">{{ issue.title | truncate(50) }}</a>
+              <span class="text-muted"> · {{ issue.repo.split('/')[1] if '/' in issue.repo else issue.repo }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0 ps-2">No assigned issues.</p>
+        {% endif %}
+      </div>
+
+      <hr class="my-2 border-secondary-subtle">
+
+      {# Today's Commits #}
+      <div class="mb-2">
+        <p class="small fw-semibold mb-1 text-body-secondary">
+          <i class="bi bi-arrow-up-circle me-1 text-success"></i>Today's Commits
+          <span class="badge bg-success ms-1">{{ d.commit_count | default(0) }}</span>
+        </p>
+        {% if d.get('commit_error') %}
+          <p class="text-warning small mb-0 ps-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.commit_error }}</p>
+        {% elif d.get('today_commits') %}
+          <ul class="list-unstyled mb-0 ps-2">
+            {% for c in d.today_commits %}
+            <li class="small text-muted mb-1"><i class="bi bi-dot"></i>{{ c.message }} <span class="text-secondary">· {{ c.repo.split('/')[1] if '/' in c.repo else c.repo }}</span></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0 ps-2">No commits today.</p>
+        {% endif %}
+      </div>
+
+      <hr class="my-2 border-secondary-subtle">
+
+      {# Notifications #}
+      <div>
+        <p class="small fw-semibold mb-1 text-body-secondary">
+          <i class="bi bi-bell me-1 text-info"></i>Notifications
+          <span class="badge bg-info text-dark ms-1">{{ d.notification_count | default(0) }}</span>
+        </p>
+        {% if d.get('notification_error') %}
+          <p class="text-warning small mb-0 ps-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.notification_error }}</p>
+        {% elif d.get('notifications') %}
+          <ul class="list-unstyled mb-0 ps-2">
+            {% for n in d.notifications %}
+            <li class="small mb-1 text-muted">
+              <span class="badge bg-secondary me-1">{{ n.reason }}</span>
+              {{ n.title | truncate(45) }}
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0 ps-2">No unread notifications.</p>
+        {% endif %}
+      </div>
+
+    {% endif %}
+  </div>
+</div>

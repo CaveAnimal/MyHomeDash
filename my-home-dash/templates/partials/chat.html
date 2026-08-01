@@ -1,0 +1,31 @@
+<section class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div>
+      <i class="bi bi-chat-dots me-2 text-primary"></i>
+      <span class="fw-semibold">Local AI Chat</span>
+    </div>
+    <small class="text-body-secondary" id="chat-status">Ready</small>
+  </div>
+  <div class="card-body p-0">
+    <div id="chat-thread" class="mhd-chat-thread"></div>
+    <form id="chat-form" class="mhd-chat-form border-top">
+      <label for="chat-input" class="visually-hidden">Message</label>
+      <textarea
+        id="chat-input"
+        class="form-control mhd-chat-input"
+        rows="2"
+        maxlength="4000"
+        placeholder="Ask your local Granite model something..."
+      ></textarea>
+      <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
+        <small class="text-body-secondary">Model: {{ cfg.get('llm', {}).get('model', 'granite3.3:8b') }}</small>
+        <div class="d-flex gap-2">
+          <button type="button" id="chat-clear" class="btn btn-outline-secondary btn-sm">Clear</button>
+          <button type="submit" id="chat-send" class="btn btn-primary btn-sm">
+            <i class="bi bi-send me-1"></i>Send
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>

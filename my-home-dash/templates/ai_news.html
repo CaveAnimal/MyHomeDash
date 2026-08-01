@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}AI News | My Home Dash{% endblock %}
+
+{% block content %}
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-info-emphasis mb-2">AI News</div>
+        <h1 class="h3 mb-2">Dedicated headline view.</h1>
+        <p class="mb-0 text-body-secondary">Scan AI coverage on a full page with more room for summaries and refreshes.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+{% if news_enabled %}
+<div id="section-news">
+  {% with data=cache.news %}
+    {% include "partials/news.html" %}
+  {% endwith %}
+</div>
+{% else %}
+<section class="card mhd-card">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-2">AI News is currently disabled.</h2>
+    <p class="mb-0 text-body-secondary">Re-enable the `news` section in `dashboard.enabled_sections` inside `config.yaml` when you want this page live again.</p>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

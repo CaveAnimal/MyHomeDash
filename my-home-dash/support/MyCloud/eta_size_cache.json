@@ -1,0 +1,40 @@
+{
+    "entries":  [
+                    {
+                        "DirectoryName":  ".pnpm-store",
+                        "SourcePath":  "E:\\.pnpm-store",
+                        "TotalBytes":  1586283454,
+                        "ScannedAtUtc":  "2026-04-04T04:43:41.6185200Z"
+                    },
+                    {
+                        "DirectoryName":  "Backup",
+                        "SourcePath":  "E:\\Backup",
+                        "TotalBytes":  337663385518,
+                        "ScannedAtUtc":  "2026-04-04T04:46:20.1792753Z"
+                    },
+                    {
+                        "DirectoryName":  "Downloads",
+                        "SourcePath":  "E:\\Downloads",
+                        "TotalBytes":  20183490382,
+                        "ScannedAtUtc":  "2026-04-04T04:46:20.8003019Z"
+                    },
+                    {
+                        "DirectoryName":  "MyProjects",
+                        "SourcePath":  "E:\\MyProjects",
+                        "TotalBytes":  103204592220,
+                        "ScannedAtUtc":  "2026-04-03T13:30:26.4509770Z"
+                    },
+                    {
+                        "DirectoryName":  "ProgramFiles",
+                        "SourcePath":  "E:\\ProgramFiles",
+                        "TotalBytes":  39969419243,
+                        "ScannedAtUtc":  "2026-04-04T04:42:50.4842172Z"
+                    },
+                    {
+                        "DirectoryName":  "tmp",
+                        "SourcePath":  "E:\\tmp",
+                        "TotalBytes":  474092,
+                        "ScannedAtUtc":  "2026-04-04T04:46:20.8151932Z"
+                    }
+                ]
+}

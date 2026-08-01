@@ -1,0 +1,31 @@
+<section class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <div>
+      <i class="bi bi-cpu me-2 text-success"></i>
+      <span class="fw-semibold">AI Operator</span>
+    </div>
+    <small class="text-body-secondary" id="operator-status">Ready</small>
+  </div>
+  <div class="card-body p-0">
+    <div id="operator-thread" class="mhd-chat-thread"></div>
+    <form id="operator-form" class="mhd-chat-form border-top">
+      <label for="operator-input" class="visually-hidden">Message</label>
+      <textarea
+        id="operator-input"
+        class="form-control mhd-chat-input"
+        rows="2"
+        maxlength="4000"
+        placeholder="Ask the operator something it can check, e.g. 'is the dashboard working?'"
+      ></textarea>
+      <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
+        <small class="text-body-secondary">Model: {{ cfg.get('llm', {}).get('model', 'granite3.3:8b') }}</small>
+        <div class="d-flex gap-2">
+          <button type="button" id="operator-clear" class="btn btn-outline-secondary btn-sm">Clear</button>
+          <button type="submit" id="operator-send" class="btn btn-success btn-sm">
+            <i class="bi bi-send me-1"></i>Send
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>

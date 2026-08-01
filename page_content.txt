@@ -1,0 +1,460 @@
+﻿<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Irrigation | My Home Dash</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- ── Navbar ──────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-expand px-3 py-2 border-bottom mhd-navbar">
+  <a class="navbar-brand fw-bold me-3" href="/">
+    <i class="bi bi-house-heart-fill text-primary me-1"></i>
+    My Home Dash
+  </a>
+  <div class="navbar-nav flex-row gap-2 me-3 mhd-nav-links">
+    <a class="nav-link " href="/">Home</a>
+    <a class="nav-link active" href="/projects/irrigation">Irrigation</a>
+    <a class="nav-link " href="/ai-news">AI News</a>
+    <a class="nav-link " href="/ai-chat">AI Chat</a>
+  </div>
+  <span class="navbar-text me-auto">
+    <span id="today-str" class="text-muted small">Saturday, May 23 2026</span>
+  </span>
+  <span class="navbar-text me-3">
+    <i class="bi bi-clock me-1 text-muted"></i>
+    <span id="live-clock" class="fw-semibold">4:37 PM</span>
+  </span>
+  <button class="btn btn-outline-secondary btn-sm"
+          hx-post="/api/refresh/all"
+          hx-target="body"
+          hx-swap="outerHTML"
+          hx-indicator="#spinner">
+    <i class="bi bi-arrow-clockwise me-1"></i>Refresh All
+  </button>
+  <span id="spinner" class="htmx-indicator ms-2 spinner-border spinner-border-sm text-primary" role="status"></span>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────────────────────── -->
+<main class="container-fluid px-3 py-3">
+  
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-primary-emphasis mb-2">Irrigation Project</div>
+        <h1 class="h3 mb-2">Prototype the first working zone this weekend.</h1>
+        <p class="mb-0 text-body-secondary">This page keeps the current irrigation plan, material references, and the working have-versus-need list in one place.</p>
+      </div>
+      <div class="text-body-secondary small">
+        Framework file copied into project folder: abstract_goal_context_decisions_todo.md
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-4">
+    <section class="card mhd-card h-100">
+      <div class="card-header">
+        <strong>This Weekend</strong>
+      </div>
+      <div class="card-body">
+        <ul class="mhd-project-summary-list">
+          <li>Install the first hose-based run.</li>
+          <li>Wire the first switch.</li>
+          <li>Test the first sprinkler head end to end.</li>
+          <li>Confirm removable parts come off cleanly while the hose path stays put.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-4">
+    <section class="card mhd-card h-100">
+      <div class="card-header">
+        <strong>Have Or Reuse</strong>
+      </div>
+      <div class="card-body">
+        <ul class="mhd-project-summary-list">
+          
+          <li>Old hose sections</li>
+          
+        </ul>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-4">
+    <section class="card mhd-card h-100">
+      <div class="card-header">
+        <strong>Need Or Confirm</strong>
+      </div>
+      <div class="card-body">
+        <ul class="mhd-project-summary-list">
+          
+          <li>Orbit B-hyve 12-station smart irrigation controller</li>
+          
+          <li>Removable sprinkler heads</li>
+          
+          <li>Switches and valve wiring</li>
+          
+        </ul>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card mhd-card mb-3">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <strong>Materials</strong>
+    <span class="text-body-secondary small">Start with the controller, then expand the inventory as parts are confirmed.</span>
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      
+      <div class="col-lg-6 col-xxl-3">
+        <article class="card border-0 h-100 mhd-material-card">
+          
+          <img src="https://static-data2.manualslib.com/product-images/09a/1401601/300x300/orbit-b-hyve.jpg" alt="Orbit B-hyve 12-station smart irrigation controller" class="mhd-material-image">
+          
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <span class="badge text-bg-warning">Need / Confirm</span>
+              <span class="text-body-secondary small">57950</span>
+            </div>
+            <h2 class="h6 mb-2">Orbit B-hyve 12-station smart irrigation controller</h2>
+            <p class="text-body-secondary small">Primary controller candidate for the prototype zone and future expansion.</p>
+            <ul class="small mb-0">
+              
+              <li>Model identified in the Orbit B-hyve 57950 manual listing.</li>
+              
+              <li>The manual references indoor/outdoor use and 12-station control.</li>
+              
+            </ul>
+          </div>
+          
+          <div class="card-footer bg-transparent border-0 pt-0 px-3 pb-3">
+            <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html#product-B-hyve%2057950" target="_blank" rel="noreferrer" class="small text-decoration-none">Open source reference</a>
+          </div>
+          
+        </article>
+      </div>
+      
+      <div class="col-lg-6 col-xxl-3">
+        <article class="card border-0 h-100 mhd-material-card">
+          
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <span class="badge text-bg-success">Have / Reuse</span>
+              <span class="text-body-secondary small">Reuse stock</span>
+            </div>
+            <h2 class="h6 mb-2">Old hose sections</h2>
+            <p class="text-body-secondary small">Base material for most water routing and for improvised protection over wiring runs.</p>
+            <ul class="small mb-0">
+              
+              <li>Cut to fit the permanent seasonal path.</li>
+              
+              <li>Leave in place over winter to avoid rebuilding the layout.</li>
+              
+            </ul>
+          </div>
+          
+        </article>
+      </div>
+      
+      <div class="col-lg-6 col-xxl-3">
+        <article class="card border-0 h-100 mhd-material-card">
+          
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <span class="badge text-bg-secondary">Need / Confirm</span>
+              <span class="text-body-secondary small">TBD</span>
+            </div>
+            <h2 class="h6 mb-2">Removable sprinkler heads</h2>
+            <p class="text-body-secondary small">Seasonal end-point hardware that must be installed, tested, and removed for winter.</p>
+            <ul class="small mb-0">
+              
+              <li>Each head must be tested after installation.</li>
+              
+              <li>Final count and head type still need confirmation.</li>
+              
+            </ul>
+          </div>
+          
+        </article>
+      </div>
+      
+      <div class="col-lg-6 col-xxl-3">
+        <article class="card border-0 h-100 mhd-material-card">
+          
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <span class="badge text-bg-secondary">Need / Confirm</span>
+              <span class="text-body-secondary small">Per zone</span>
+            </div>
+            <h2 class="h6 mb-2">Switches and valve wiring</h2>
+            <p class="text-body-secondary small">Each switch needs to be wired and proven against the corresponding head before sign-off.</p>
+            <ul class="small mb-0">
+              
+              <li>Need enough wire, connectors, and terminations for each active zone.</li>
+              
+              <li>Manual page 6 is the current wiring reference for the controller candidate.</li>
+              
+            </ul>
+          </div>
+          
+          <div class="card-footer bg-transparent border-0 pt-0 px-3 pb-3">
+            <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html?page=6#manual" target="_blank" rel="noreferrer" class="small text-decoration-none">Open source reference</a>
+          </div>
+          
+        </article>
+      </div>
+      
+    </div>
+  </div>
+</section>
+
+<div class="row g-3">
+  
+  <div class="col-12">
+    <section class="card mhd-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <strong>Goals</strong>
+        <span class="text-body-secondary small">goals.md</span>
+      </div>
+      <div class="card-body mhd-project-doc">
+        <h1>Irrigation Project Goals</h1>
+<h2>Project Statement</h2>
+<p>Build a partially removable irrigation system where most of the plumbing runs and the protective shielding for wiring are made from old hoses cut to fit. The hose-based paths stay in place over winter, while the sprinkler heads and switches are removed seasonally.</p>
+<h2>Core Goals</h2>
+<ul>
+<li>Use old hoses as the main material for both water routing and protective shielding for irrigation wiring.</li>
+<li>Keep the hoses installed over winter so the permanent layout does not need to be rebuilt each season.</li>
+<li>Make the sprinkler heads removable.</li>
+<li>Make the switches removable.</li>
+<li>Ensure each switch is wired correctly.</li>
+<li>Test each sprinkler head individually before considering it complete.</li>
+</ul>
+<h2>Materials And Reference Pictures</h2>
+<h3>Main Controller Candidate</h3>
+<figure class="mhd-markdown-figure"><img src="https://static-data2.manualslib.com/product-images/09a/1401601/300x300/orbit-b-hyve.jpg" alt="Orbit B-hyve 12-station controller model 57950" class="mhd-markdown-image rounded border">
+<figcaption>Orbit B-hyve 12-station controller model 57950</figcaption>
+</figure>
+<ul>
+<li>Controller target: Orbit B-hyve 12-station indoor/outdoor smart irrigation controller</li>
+<li>Model number: 57950</li>
+<li>Role: main controller for the first prototype and the larger system build-out</li>
+<li>Source reference: <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html#product-B-hyve%2057950" target="_blank" rel="noreferrer">Orbit B-hyve 57950 manual listing</a></li>
+<li>Status: need to confirm whether this controller is already on hand or needs to be purchased</li>
+</ul>
+<h2>What I Have Or Expect To Reuse</h2>
+<ul>
+<li>Old hoses to cut and fit for the main water runs.</li>
+<li>Old hoses to use as protective shielding over exposed wiring runs where practical.</li>
+<li>A design approach that leaves the hose-based path in place through winter.</li>
+</ul>
+<h2>What I Still Need To Confirm Or Acquire</h2>
+<ul>
+<li>The main controller, starting with Orbit 57950.</li>
+<li>The removable sprinkler heads for each active zone.</li>
+<li>The removable switches and the full switch count.</li>
+<li>Wiring, waterproof connectors, and mounting hardware needed to wire each switch correctly.</li>
+<li>Any additional fittings, adapters, or clamps needed to mate the hose-based runs to the controller and sprinkler heads.</li>
+</ul>
+<h2>System Intent</h2>
+<p>The system should be easy to partially disassemble at the end of the season without tearing out the full layout. The hoses act as the long-term physical path, while the more exposed or fragile parts, especially heads and switches, are the parts to remove and reinstall.</p>
+<h2>Prototype Goal For This Weekend</h2>
+<ul>
+<li>Get the first irrigation zone or first unit working this weekend.</li>
+<li>Install the first hose-based run in its intended layout.</li>
+<li>Wire the first switch.</li>
+<li>Connect and test the first sprinkler head.</li>
+<li>Confirm that the switch activates correctly and the head operates as expected.</li>
+<li>Confirm that the removable parts can be detached without disturbing the hose path that remains in place.</li>
+</ul>
+<h2>Work Requirements</h2>
+<ul>
+<li>Each switch must be wired before it can be tested.</li>
+<li>Each sprinkler head must be tested for operation, placement, and basic reliability.</li>
+<li>The prototype should prove that the hose-based approach works for both water routing and wire protection.</li>
+<li>The prototype should also confirm that seasonal removal of heads and switches is practical.</li>
+</ul>
+<h2>Initial Success Criteria</h2>
+<ul>
+<li>The first prototype unit runs successfully this weekend.</li>
+<li>The first switch activates the intended sprinkler head.</li>
+<li>The first head delivers water correctly without obvious leaks or misrouting.</li>
+<li>The hose remains in place as the reusable base structure.</li>
+<li>The switch and sprinkler head can be removed after testing without dismantling the full run.</li>
+</ul>
+<h2>Estimated Completion Approach</h2>
+<ul>
+<li>This weekend: complete the first working prototype.</li>
+<li>Next 1 to 2 weekends: wire remaining switches and test additional heads.</li>
+<li>Following 1 to 3 weekends: refine fit, durability, removability, and seasonal handling.</li>
+<li>Overall first usable system estimate: 3 to 6 weekends depending on the number of heads, switches, and adjustments needed after the prototype.</li>
+</ul>
+      </div>
+    </section>
+  </div>
+  
+  <div class="col-12">
+    <section class="card mhd-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <strong>Context</strong>
+        <span class="text-body-secondary small">context.md</span>
+      </div>
+      <div class="card-body mhd-project-doc">
+        <h1>Irrigation Project Context</h1>
+<h2>Current Working Design</h2>
+<ul>
+<li>The irrigation system is meant to be partially removable.</li>
+<li>Most of the long-run plumbing will be built from old hoses cut to fit the layout.</li>
+<li>Those same old hoses may also act as protective sleeves over wiring where that is practical.</li>
+<li>The hose-based path is intended to stay in place over winter.</li>
+<li>The sprinkler heads and switches are intended to be removed seasonally.</li>
+</ul>
+<h2>Current Assumptions</h2>
+<ul>
+<li>Old hoses are available or expected to be available for reuse.</li>
+<li>The first prototype only needs one working controller path, one wired switch, and one tested head.</li>
+<li>Each switch will require its own wiring check before activation.</li>
+<li>Each sprinkler head must be tested individually before it can be accepted.</li>
+</ul>
+<h2>What I Have Or Expect To Reuse</h2>
+<ul>
+<li>Old hose stock for the base routing.</li>
+<li>The basic site layout concept for leaving the hose path in place through winter.</li>
+<li>A weekend-first work plan for getting the first unit running quickly.</li>
+</ul>
+<h2>What I Need To Confirm Or Acquire</h2>
+<ul>
+<li>Orbit B-hyve 12-station controller, model 57950.</li>
+<li>The final count and type of removable sprinkler heads.</li>
+<li>The final count and type of removable switches.</li>
+<li>Wire, waterproof connectors, and any controller-side termination materials.</li>
+<li>Any adapters, clamps, or fittings needed to connect hose-based runs to the controller and heads.</li>
+</ul>
+<h2>Key Reference For The First Material</h2>
+<ul>
+<li>Orbit B-hyve 57950 manual listing: <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html#product-B-hyve%2057950" target="_blank" rel="noreferrer">Orbit B-hyve 57950 manual</a></li>
+<li>Wiring reference page: <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html?page=6#manual" target="_blank" rel="noreferrer">Orbit B-hyve wiring page</a></li>
+<li>Box contents reference page: <a href="https://www.manualslib.com/manual/1401601/Orbit-B-Hyve.html?page=4#manual" target="_blank" rel="noreferrer">Orbit B-hyve box contents</a></li>
+</ul>
+<h2>Dashboard Requirement</h2>
+<ul>
+<li>This project needs to stay readable inside My Home Dash.</li>
+<li>The dashboard view should clearly separate what is already available from what still needs to be confirmed or acquired.</li>
+<li>Material references should include real-world source links whenever practical.</li>
+</ul>
+      </div>
+    </section>
+  </div>
+  
+  <div class="col-12">
+    <section class="card mhd-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <strong>Decisions</strong>
+        <span class="text-body-secondary small">decisions.md</span>
+      </div>
+      <div class="card-body mhd-project-doc">
+        <h1>Irrigation Decisions</h1>
+<h2>DECISION-001</h2>
+<h3>Decision</h3>
+<p>Use old hoses as the main seasonal backbone for both water routing and protective shielding over wiring where practical.</p>
+<h3>Why</h3>
+<ul>
+<li>The hose material can be cut to fit the layout.</li>
+<li>Leaving the hose runs in place over winter reduces rebuild work.</li>
+<li>It supports the goal of a partially removable system instead of a fully rebuilt one.</li>
+</ul>
+<h2>DECISION-002</h2>
+<h3>Decision</h3>
+<p>Remove sprinkler heads and switches seasonally while leaving the hose-based path in place.</p>
+<h3>Why</h3>
+<ul>
+<li>The heads and switches are the parts most likely to need protection, replacement, or easier off-season handling.</li>
+<li>Seasonal removal is the key maintenance behavior the prototype needs to prove.</li>
+</ul>
+<h2>DECISION-003</h2>
+<h3>Decision</h3>
+<p>Start controller research and prototype planning with the Orbit B-hyve 12-station controller, model 57950.</p>
+<h3>Why</h3>
+<ul>
+<li>It is the first named controller target for this project.</li>
+<li>It gives the planning documents and prototype work a concrete controller reference.</li>
+<li>The available manual provides immediate box-content and wiring references.</li>
+</ul>
+<h2>DECISION-004</h2>
+<h3>Decision</h3>
+<p>Treat this weekend&#x27;s target as one working prototype path rather than a full system rollout.</p>
+<h3>Why</h3>
+<ul>
+<li>A single successful controller-switch-head path is the fastest proof of concept.</li>
+<li>It reduces risk before committing to the remaining zones.</li>
+<li>It creates a realistic weekend-sized milestone.</li>
+</ul>
+      </div>
+    </section>
+  </div>
+  
+  <div class="col-12">
+    <section class="card mhd-card">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <strong>Todo</strong>
+        <span class="text-body-secondary small">todo.md</span>
+      </div>
+      <div class="card-body mhd-project-doc">
+        <h1>Irrigation Todo</h1>
+<h2>This Weekend Prototype</h2>
+<ul>
+<li>[ ] Confirm whether the Orbit 57950 controller is already on hand or needs to be bought.</li>
+<li>[ ] Pull together the old hoses intended for reuse.</li>
+<li>[ ] Choose the first prototype run and cut the hose path to fit.</li>
+<li>[ ] Mount or bench-place the controller for testing.</li>
+<li>[ ] Wire the first switch.</li>
+<li>[ ] Connect the first sprinkler head.</li>
+<li>[ ] Run a live test of the first head.</li>
+<li>[ ] Verify the switch and head can be removed without pulling out the hose path.</li>
+</ul>
+<h2>Next Steps After The First Prototype</h2>
+<ul>
+<li>[ ] Count the remaining switches required.</li>
+<li>[ ] Count the remaining sprinkler heads required.</li>
+<li>[ ] Confirm the final material list for hose adapters, connectors, and mounting hardware.</li>
+<li>[ ] Add more real pictures for the remaining materials.</li>
+<li>[ ] Expand the system one zone at a time after the first working prototype is stable.</li>
+</ul>
+<h2>Acceptance Markers</h2>
+<ul>
+<li>[ ] One controller path works end to end.</li>
+<li>[ ] One switch is wired and tested successfully.</li>
+<li>[ ] One sprinkler head is tested successfully.</li>
+<li>[ ] The removable-season concept works without tearing out the hose backbone.</li>
+</ul>
+      </div>
+    </section>
+  </div>
+  
+</div>
+
+</main>
+
+<!-- Bootstrap JS bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

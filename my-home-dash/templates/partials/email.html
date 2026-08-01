@@ -1,0 +1,67 @@
+{# Email partial — shows all 4 accounts #}
+{% set d = data %}
+<div class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span>
+      <i class="bi bi-envelope text-success me-2"></i>
+      <strong>Email</strong>
+      {% if d.get('total_unread') %}
+        <span class="badge bg-success ms-2">{{ d.total_unread }} unread</span>
+      {% endif %}
+    </span>
+    <button class="btn btn-outline-secondary btn-sm"
+            hx-post="/api/refresh/email"
+            hx-target="#section-email"
+            hx-swap="innerHTML">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+  <div class="card-body overflow-auto mhd-section-body">
+    {% if d.get('status') == 'pending' %}
+      <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+    {% elif d.get('accounts') %}
+      {% for acc in d.accounts %}
+      <div class="mb-3">
+        <div class="d-flex align-items-center mb-1">
+          {% if acc.type == 'microsoft' %}
+            <i class="bi bi-microsoft text-primary me-1"></i>
+          {% else %}
+            <i class="bi bi-google text-danger me-1"></i>
+          {% endif %}
+          <span class="fw-semibold small">{{ acc.label }}</span>
+          {% if acc.get('unread_count') is not none and not acc.get('error') %}
+            <span class="badge bg-secondary ms-2">{{ acc.unread_count }}</span>
+          {% endif %}
+        </div>
+        {% if acc.id == 'home_outlook' and not acc.get('error') %}
+          <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Home Outlook folder">
+            <button type="button" class="btn btn-outline-secondary active mhd-email-folder-btn" data-folder="inbox">Inbox</button>
+            <button type="button" class="btn btn-outline-secondary mhd-email-folder-btn" data-folder="junk">Junk</button>
+          </div>
+          <div id="home-outlook-messages" class="ps-2">
+            <p class="text-muted small mb-0"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+          </div>
+          <div class="mhd-email-organize-confirm d-none mt-2 p-2 border rounded small bg-body-tertiary"></div>
+        {% elif acc.get('error') %}
+          <p class="text-warning small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>{{ acc.error }}</p>
+        {% elif acc.get('subjects') %}
+          <ul class="list-unstyled mb-0 ps-2">
+            {% for msg in acc.subjects %}
+            <li class="small text-muted mb-1 text-truncate" title="{{ msg.subject }}">
+              <i class="bi bi-dot text-secondary"></i>
+              <span class="text-body-secondary">{{ msg.from | truncate(20, true) }}</span>
+              · {{ msg.subject | truncate(40, true) }}
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-muted small mb-0 ps-2">No unread messages.</p>
+        {% endif %}
+      </div>
+      {% if not loop.last %}<hr class="my-2 border-secondary-subtle">{% endif %}
+      {% endfor %}
+    {% else %}
+      <p class="text-muted small">No data available.</p>
+    {% endif %}
+  </div>
+</div>

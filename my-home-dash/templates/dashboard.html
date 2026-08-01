@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for row in dashboard_rows %}
+  {% if row.container_class %}
+  <div class="{{ row.container_class }}">
+  {% endif %}
+    {% for section in row.sections %}
+      {% if section.column_class %}
+      <div class="{{ section.column_class }}">
+      {% endif %}
+        <div id="section-{{ section.name }}" class="{{ section.wrapper_class }}">
+          {% with data=cache[section.name] %}
+            {% include section.template %}
+          {% endwith %}
+        </div>
+      {% if section.column_class %}
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% if row.container_class %}
+  </div>
+  {% endif %}
+{% endfor %}
+
+{% endblock %}

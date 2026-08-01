@@ -1,0 +1,43 @@
+{# News partial #}
+{% set d = data %}
+<div class="card mhd-card h-100">
+  <div class="card-header d-flex align-items-center justify-content-between">
+    <span>
+      <i class="bi bi-newspaper text-info me-2"></i>
+      <strong>AI News</strong>
+      {% if d.get('count') %}
+        <span class="badge bg-info text-dark ms-2">{{ d.count }} stories</span>
+      {% endif %}
+      {% if d.get('max_age_hours') %}
+        <span class="text-muted small ms-2">last {{ d.max_age_hours }}h</span>
+      {% endif %}
+    </span>
+    <button class="btn btn-outline-secondary btn-sm"
+            hx-post="/api/refresh/news"
+            hx-target="#section-news"
+            hx-swap="innerHTML">
+      <i class="bi bi-arrow-clockwise"></i>
+    </button>
+  </div>
+  <div class="card-body overflow-auto mhd-section-body">
+    {% if d.get('status') == 'pending' %}
+      <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+    {% elif d.get('stories') %}
+      <div class="row g-2">
+        {% for story in d.stories %}
+        <div class="col-md-6">
+          <div class="mhd-news-item p-2 rounded border border-secondary-subtle h-100">
+            <a href="{{ story.link }}" target="_blank"
+               class="fw-semibold text-decoration-none text-body mhd-news-title">{{ story.title }}</a>
+            <p class="text-muted small mb-1 mt-1">{{ story.summary }}</p>
+            <span class="badge bg-secondary me-1">{{ story.source }}</span>
+            <span class="text-muted small">{{ story.published_str }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="text-muted small">No stories found in the last {{ d.get('max_age_hours', 24) }} hours.</p>
+    {% endif %}
+  </div>
+</div>

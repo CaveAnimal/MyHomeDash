@@ -303,26 +303,66 @@ def count_sender_messages(account_id: str, folder_key: str, sender_address: str)
         return {"error": str(exc)}
 
 
-def _find_or_create_folder(headers: dict, display_name: str) -> dict:
-    """Look up a top-level mail folder by name, creating it if it doesn't exist yet.
-
-    Reusing an existing folder makes "organize this sender" idempotent — checking
-    the same sender again later just adds newer mail to the same folder.
-    """
+def _find_child_folder(headers: dict, parent_id: str | None, display_name: str) -> dict | None:
     safe_name = display_name.replace("'", "''")
+    url = (
+        f"{GRAPH_BASE}/me/mailFolders"
+        if parent_id is None
+        else f"{GRAPH_BASE}/me/mailFolders/{parent_id}/childFolders"
+    )
     resp = requests.get(
-        f"{GRAPH_BASE}/me/mailFolders",
+        url,
         headers=headers,
-        params={"$filter": f"displayName eq '{safe_name}'"},
+        params={"$filter": f"displayName eq '{safe_name}'", "$select": "id,displayName"},
         timeout=15,
     )
     resp.raise_for_status()
     existing = resp.json().get("value", [])
+    return existing[0] if existing else None
+
+
+def _find_descendant_folder(headers: dict, parent_id: str, display_name: str) -> dict | None:
+    url = f"{GRAPH_BASE}/me/mailFolders/{parent_id}/childFolders"
+    params = {"$select": "id,displayName,childFolderCount", "$top": 100}
+    while url:
+        resp = requests.get(url, headers=headers, params=params, timeout=15)
+        resp.raise_for_status()
+        payload = resp.json()
+        for child in payload.get("value", []):
+            if child.get("displayName", "").casefold() == display_name.casefold():
+                return child
+            if child.get("childFolderCount", 0):
+                found = _find_descendant_folder(headers, child["id"], display_name)
+                if found:
+                    return found
+        url = payload.get("@odata.nextLink")
+        params = None
+    return None
+
+
+def _find_or_create_folder(headers: dict, display_name: str) -> dict:
+    """Reuse a folder under Mail Box, or create it under Legacy & Unsorted."""
+    mailbox = _find_child_folder(headers, None, "Mail Box")
+    if not mailbox:
+        raise RuntimeError("Outlook folder 'Mail Box' was not found.")
+
+    existing = _find_descendant_folder(headers, mailbox["id"], display_name)
     if existing:
-        return {"id": existing[0]["id"], "created": False}
+        return {"id": existing["id"], "created": False}
+
+    fallback = _find_child_folder(headers, mailbox["id"], "Legacy & Unsorted")
+    if not fallback:
+        fallback_resp = requests.post(
+            f"{GRAPH_BASE}/me/mailFolders/{mailbox['id']}/childFolders",
+            headers=headers,
+            json={"displayName": "Legacy & Unsorted"},
+            timeout=15,
+        )
+        fallback_resp.raise_for_status()
+        fallback = fallback_resp.json()
 
     create_resp = requests.post(
-        f"{GRAPH_BASE}/me/mailFolders",
+        f"{GRAPH_BASE}/me/mailFolders/{fallback['id']}/childFolders",
         headers=headers,
         json={"displayName": display_name},
         timeout=15,
@@ -387,7 +427,19 @@ def _find_or_create_rule(headers: dict, sender_address: str, dest_folder_id: str
     for rule in existing_rules:
         for term in (rule.get("conditions", {}) or {}).get("senderContains", []) or []:
             if term.lower() == domain:
-                return {"id": rule["id"], "created": False}
+                actions = rule.get("actions") or {}
+                if actions.get("moveToFolder") == dest_folder_id:
+                    return {"id": rule["id"], "created": False, "updated": False}
+                actions["moveToFolder"] = dest_folder_id
+                actions["stopProcessingRules"] = True
+                update_resp = requests.patch(
+                    f"{rules_url}/{rule['id']}",
+                    headers=headers,
+                    json={"actions": actions},
+                    timeout=15,
+                )
+                update_resp.raise_for_status()
+                return {"id": rule["id"], "created": False, "updated": True}
 
     body = {
         "displayName": display_name,
@@ -401,7 +453,7 @@ def _find_or_create_rule(headers: dict, sender_address: str, dest_folder_id: str
     }
     create_resp = requests.post(rules_url, headers=headers, json=body, timeout=15)
     create_resp.raise_for_status()
-    return {"id": create_resp.json()["id"], "created": True}
+    return {"id": create_resp.json()["id"], "created": True, "updated": False}
 
 
 def organize_sender(
@@ -411,7 +463,7 @@ def organize_sender(
     folder_name: str,
     create_rule: bool = False,
 ) -> dict:
-    """Create (or reuse) a top-level folder and move every message from this sender into it.
+    """Create (or reuse) a folder under Mail Box and move this sender's messages into it.
 
     If create_rule is set, also create (or reuse) an Inbox rule so future mail from
     this sender is moved into the same folder automatically.

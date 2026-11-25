@@ -15,10 +15,10 @@
         class="form-control mhd-chat-input"
         rows="2"
         maxlength="4000"
-        placeholder="Ask your local Granite model something..."
+        placeholder="Ask your local AI model something..."
       ></textarea>
       <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
-        <small class="text-body-secondary">Model: {{ cfg.get('llm', {}).get('model', 'granite3.3:8b') }}</small>
+        <small class="text-body-secondary">Model: {{ active_model or cfg.get('llm', {}).get('bonsai_model', 'bonsai2-27b') }}</small>
         <div class="d-flex gap-2">
           <button type="button" id="chat-clear" class="btn btn-outline-secondary btn-sm">Clear</button>
           <button type="submit" id="chat-send" class="btn btn-primary btn-sm">

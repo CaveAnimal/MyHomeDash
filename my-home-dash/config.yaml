@@ -3,7 +3,7 @@
 # ─────────────────────────────────────────────
 
 # ── GENERAL ──────────────────────────────────
-timezone: "America/New_York"           # IANA timezone string
+timezone: "America/Chicago"            # IANA timezone string
 location:
   city: "New York"
   lat: 40.7128
@@ -21,27 +21,36 @@ schedule:
 # ── EMAIL ────────────────────────────────────
 email:
   max_subjects_per_account: 10         # How many subject lines to show
+  jev_classification:
+    enabled: false                     # Set true + add TYPESAFE_API_KEY in .env to enable
+    timeout_seconds: 5
+    # categories:                      # Optional override; see _DEFAULT_JEV_CATEGORIES in email_mod.py
+    #   urgent: "Time-sensitive; needs a response or action today"
+    #   action_needed: "Requires a reply or task, but isn't urgent"
+    #   informational: "Newsletter, notification, or FYI with nothing to do"
+    #   low_priority: "Promotional, automated, or safe to ignore"
   accounts:
-    - id: work_outlook
-      label: "Work Outlook"
-      type: microsoft
-      auth_token: auth/tokens/msal_work.json
+    # - id: work_outlook
+    #   label: "Work Outlook"
+    #   type: microsoft
+    #   auth_token: auth/tokens/msal_work.json
     - id: home_outlook
       label: "Home Outlook"
       type: microsoft
       auth_token: auth/tokens/msal_home.json
-    - id: gmail_1
-      label: "Gmail (Personal)"
-      type: google
-      auth_token: auth/tokens/google_gmail1.json
-    - id: gmail_2
-      label: "Gmail (Secondary)"
-      type: google
-      auth_token: auth/tokens/google_gmail2.json
+    # - id: gmail_1
+    #   label: "Gmail (Personal)"
+    #   type: google
+    #   auth_token: auth/tokens/google_gmail1.json
+    # - id: gmail_2
+    #   label: "Gmail (Secondary)"
+    #   type: google
+    #   auth_token: auth/tokens/google_gmail2.json
 
 # ── CALENDAR ─────────────────────────────────
 calendar:
-  account: work_outlook                # Which email account has the calendar
+  source: graph                        # graph or ics
+  account: home_outlook                # Which Microsoft account has the calendar
   days_ahead: 0                        # 0 = today only; 1 = today + tomorrow
 
 # ── GITHUB ───────────────────────────────────
@@ -98,9 +107,16 @@ dashboard:
     - github
 
 # ── LOCAL LLM ───────────────────────────────
+# Chat always targets Bonsai. Only if Bonsai's server is down does the app check whether Ollama
+# or LM Studio already has a model resident in VRAM; it never loads one itself. Granite is retired.
 llm:
+  # Bonsai 2 27B served by PrismML's llama.cpp fork (OpenAI-compatible API). Its launcher
+  # (E:\AI\models\Bonsai\Bonsai-demo\scripts\start_llama_server.ps1) hardcodes port 1080.
+  bonsai_base_url: "http://127.0.0.1:1080"
+  bonsai_model: "bonsai2-27b"
+  # Fallback runtimes, used only if Bonsai is down AND one of them already has a model loaded.
   base_url: "http://127.0.0.1:11434"
-  model: "granite3.3:8b"
+  lm_studio_base_url: "http://127.0.0.1:1234"
   timeout_seconds: 90
   keep_alive: "10m"
   temperature: 0.2

@@ -64,7 +64,7 @@ def _should_use_retrieval(question: str, internet_cfg: dict) -> bool:
 def _build_capability_context() -> dict:
     context = (
         "Capability: My Home Dash can use backend-mediated internet retrieval for some questions.\n"
-        "Limits: Granite 3.3 still runs locally in Ollama and is not itself a free-browsing web client.\n"
+        "Limits: Bonsai 2 27B still runs locally via llama.cpp and is not itself a free-browsing web client.\n"
         "Behavior: if live retrieval is needed and succeeds, answers can include current external information; "
         "if retrieval is unavailable, the assistant should say that live web retrieval was not available for that answer rather than claiming it can never access the internet."
     )
@@ -76,7 +76,7 @@ def _build_capability_context() -> dict:
         "mode": "capability_info",
         "direct_answer": (
             "Yes. This chat can use backend-mediated internet retrieval for some questions. "
-            "Granite 3.3 still runs locally in Ollama, but My Home Dash can fetch live external information when needed. "
+            "Bonsai 2 27B still runs locally via llama.cpp, but My Home Dash can fetch live external information when needed. "
             "It is not an unrestricted browsing agent, so not every question triggers web access."
         ),
     }

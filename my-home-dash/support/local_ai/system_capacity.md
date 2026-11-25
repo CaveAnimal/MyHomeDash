@@ -73,6 +73,8 @@ Checked: 2026-03-14T21:35:25.470425-05:00
 
 ## Agent System Recommendation
 
+> Historical (March 2026). This research picked Granite 3.3 8B. The dashboard now runs Bonsai 2 27B instead; see `decisions.md` Decision 9 and the Bonsai section below.
+
 ### Workload Assumption
 
 - Target system: a local agent runner similar to OpenClaw, where the model repeatedly plans, calls tools, reads tool output, and iterates.
@@ -114,95 +116,39 @@ Checked: 2026-03-14T21:35:25.470425-05:00
 - If you want an even faster controller for lightweight orchestration, retries, routing, or summarization, test llama3.2:3b as a secondary orchestrator model.
 - Keep the larger off-GPU model strategy for specialized one-shot reasoning tasks, not for the main inner loop of an autonomous tool-using agent.
 
-## Granite 3.3 8B Setup And Startup
+## Bonsai 2 27B Setup And Startup
 
 ### Bottom Line
 
-- You do not need to install the CUDA Toolkit just to run Ollama on this Windows machine with the RTX 3060.
-- For Ollama, the important requirement is a supported NVIDIA GPU and a current NVIDIA driver. Ollama documents NVIDIA support for compute capability 5.0+ and driver version 531 or newer.
-- Your RTX 3060 is in the supported class, and this machine is already on NVIDIA driver 581.57, so the driver side is ready.
+- The dashboard's local model is Bonsai 2 27B, a ternary-quantized 27B model (`Ternary-Bonsai-2-27B-PQ2_0.gguf`). It is served by PrismML's llama.cpp fork (`llama-server`) on `http://127.0.0.1:1080`.
+- At about 5.9 GB of weights, it fits in the RTX 3060's 12 GiB with room left for the KV cache.
+- Everything is installed under `E:\AI\models\Bonsai\Bonsai-demo` (binaries in `bin\cuda\`, model in `models\bonsai2-gguf\27B\`). Its one-time `setup.ps1` handles installation; the launcher never downloads anything.
 
-### Manual Setup Steps
+### How It Gets Started
 
-1. Confirm the NVIDIA driver is visible:
-	- Run `nvidia-smi`
-	- Confirm the GPU is listed and the driver is 531 or newer.
-2. Confirm Ollama is installed:
-	- Run `ollama --version`
-	- On this machine Ollama is already installed at `C:\Users\jpful\AppData\Local\Programs\Ollama\ollama.exe`.
-3. Download the recommended model:
-	- Run `ollama pull granite3.3:8b`
-4. Warm the model so Ollama loads it:
-	- Run `ollama run granite3.3:8b "Reply with READY."`
-5. Verify that the model is loaded and ready:
-	- Run `ollama ps`
-	- Confirm there is a row for `granite3.3:8b`
-	- Check the `PROCESSOR` column and confirm it shows `GPU` rather than CPU-only execution.
-6. Double-check GPU activity if needed:
-	- Run `nvidia-smi`
-	- During or immediately after a prompt, GPU memory usage should increase and you may also see active compute usage.
+- At boot: `E:\MyProjects\autostart\start_all.ps1` waits for the NVIDIA driver, starts Bonsai, and then starts the dashboard.
+- On demand: `start_or_restart_mhd.ps1` (repo root) checks `/v1/models`. If Bonsai is down, it runs `E:\AI\models\Bonsai\Bonsai-demo\scripts\start_llama_server.ps1` in a hidden background process, writes its output to `logs\bonsai_server.log`, and waits up to `-BonsaiTimeoutSeconds` (default 300).
+- Pass `-SkipBonsai` (alias `-SkipGranite`) to leave Bonsai alone.
+- The launcher also starts SearXNG (port 1890) and its MCP bridge (port 1891) for Bonsai's own web search. The dashboard does not use them.
 
-### How To Tell If It Is Actually Using The GPU
+### How To Tell It Is Ready And On The GPU
 
-- Best quick check: `ollama ps`
-- Expected result: `granite3.3:8b` appears in the process list and the `PROCESSOR` column includes `GPU`.
-- Secondary check: `nvidia-smi`
-- Expected result: VRAM usage rises when the model is pulled into memory and queried.
-- Failure mode to watch for: if the model loads but `ollama ps` does not show `GPU`, Ollama has likely fallen back to CPU or mixed execution.
+- `Invoke-RestMethod http://127.0.0.1:1080/v1/models` answers only after the model has loaded.
+- `nvidia-smi` should list `llama-server.exe` holding several GiB of VRAM.
+- Quick chat check (allow enough tokens, because Bonsai reasons before it answers):
 
-### Startup Automation Created In This Folder
-
-- PowerShell automation: `start_granite3_3_8b.ps1`
-- Windows launcher wrapper: `start_granite3_3_8b.cmd`
-- Benchmark script: `benchmark_ollama_model.py`
-- Script location: `my-home-dash/support/local_ai/`
-
-### What The Startup Script Does
-
-- Verifies that Ollama is installed.
-- Verifies that `nvidia-smi` can see the NVIDIA GPU.
-- Verifies the NVIDIA driver is new enough for Ollama GPU support.
-- Starts the Ollama desktop app if the CLI is not yet responding.
-- Downloads `granite3.3:8b` if it is not already present.
-- Sends a short warmup prompt to load the model.
-- Runs `ollama ps` and reports whether the model appears to be loaded on GPU.
-- Optionally calls the benchmark script after warmup and GPU verification.
-
-### Benchmark Profiles
-
-- `quick`: a short latency-focused prompt for measuring the hot-path response of a warmed local model.
-- `agent_tool`: a longer agent-style prompt that forces structured JSON output and explicit tool-call formatting.
-- Default behavior of `benchmark_ollama_model.py`: runs both profiles unless you explicitly choose one or more `--profile` values.
-
-### How To Run The Script Manually
-
-- PowerShell: `powershell -NoProfile -ExecutionPolicy Bypass -File .\my-home-dash\support\local_ai\start_granite3_3_8b.ps1`
-- CMD wrapper: `.\my-home-dash\support\local_ai\start_granite3_3_8b.cmd`
-- Dry-run test only: `powershell -NoProfile -ExecutionPolicy Bypass -File .\my-home-dash\support\local_ai\start_granite3_3_8b.ps1 -DryRun`
-- Warm, verify, and then benchmark automatically: `powershell -NoProfile -ExecutionPolicy Bypass -File .\my-home-dash\support\local_ai\start_granite3_3_8b.ps1 -RunBenchmark -BenchmarkRuns 2`
-- Benchmark specific profiles only: `powershell -NoProfile -ExecutionPolicy Bypass -File .\my-home-dash\support\local_ai\start_granite3_3_8b.ps1 -RunBenchmark -BenchmarkProfiles quick,agent_tool`
-- Run the benchmark script directly: `e:\MyProjects\MyGitHubCopilot\MyHomeDash\MHD-001\.venv\Scripts\python.exe .\my-home-dash\support\local_ai\benchmark_ollama_model.py --model granite3.3:8b --runs 2 --profile quick --profile agent_tool`
-
-### How To Run It At Windows Startup
-
-1. Open Task Scheduler.
-2. Create a new task named `Start Granite 3.3 8B`.
-3. Use trigger `At log on` for your user account.
-4. Use action `Start a program`.
-5. Program/script: `powershell.exe`
-6. Add arguments: `-NoProfile -ExecutionPolicy Bypass -File "E:\MyProjects\MyGitHubCopilot\MyHomeDash\MHD-001\my-home-dash\support\local_ai\start_granite3_3_8b.ps1"`
-7. Save the task and test it once manually from Task Scheduler.
+```powershell
+$body = @{ model='bonsai2-27b'; messages=@(@{role='user';content='Reply with the single word READY.'}); max_tokens=400 } | ConvertTo-Json
+(Invoke-RestMethod -Uri http://127.0.0.1:1080/v1/chat/completions -Method Post -Body $body -ContentType 'application/json').choices[0].message.content
+```
 
 ### Current Status
 
-- The startup script has been created.
-- The model `granite3.3:8b` has been downloaded successfully on this machine.
-- The startup script warmed the model and `ollama ps` reported `100% GPU`, confirming GPU residency.
-- A live follow-up check showed `granite3.3:8b` still loaded with about 7.5 GiB of VRAM in use on the RTX 3060.
-- The benchmark script has been created and executed successfully against the live model.
-- The startup script has also been verified end-to-end with `-RunBenchmark`, confirming that post-warmup automatic benchmarking works.
-
+- 2026-11-22: started cold by `start_or_restart_mhd.ps1`; `/v1/models` answered within the wait window, and the chat check above returned `READY`.
+- There are no Bonsai benchmarks yet. `benchmark_ollama_model.py` speaks Ollama's API only.
 ## Granite Benchmarks
+
+> Historical (March 2026): Granite 3.3 8B via Ollama, before it was retired. Rerunning `benchmark_ollama_model.py` replaces this section.
 
 ### Profile: quick
 

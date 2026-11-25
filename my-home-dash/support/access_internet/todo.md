@@ -11,7 +11,7 @@
 
 ## Completed
 
-- [x] Define the goal for internet-enabled Granite 3.3 responses.
+- [x] Define the goal for internet-enabled local model responses (originally Granite 3.3; now Bonsai 2 27B).
 - [x] Document the current system context and current gap.
 - [x] Record the core architectural decisions for backend-mediated retrieval.
 - [x] Create a task tracker for the access_internet workstream.
@@ -47,8 +47,8 @@
 - Why it matters: The goal cannot be met until the Flask chat path can fetch and inject external context.
 - [x] Implement the retrieval layer in backend code.
 - [x] Add backend retrieval helpers or modules.
-- [x] Route qualifying chat requests through retrieval before calling Ollama.
-- [x] Keep model inference local through Ollama.
+- [x] Route qualifying chat requests through retrieval before calling the local model.
+- [x] Keep model inference local (Ollama at the time; Bonsai via llama.cpp since 2026-11-22).
 - [x] Fail gracefully when retrieval is unavailable.
 
 ### 5. Update The Chat UI To Surface Retrieval State
@@ -79,7 +79,8 @@
 - Keep the first retrieval implementation narrow.
 - Prefer explicit source control and predictable backend behavior over autonomous browsing logic.
 - Reuse existing project patterns for `requests`, config handling, and error responses where possible.
-- Validation note: the first verification pass used Flask test-client scenarios for local-only, retrieval-used, and retrieval-error paths without requiring live Ollama or live internet access.
+- Validation note: the first verification pass used Flask test-client scenarios for local-only, retrieval-used, and retrieval-error paths without requiring a live model runtime or live internet access.
+- Validation note (2026-11-24): re-verified live against Bonsai. The `capability_info` direct reply works, and a DuckDuckGo `no-result` lookup degrades to a clearly labelled answer from the model's own knowledge.
 - [x] Fix chat claims about lacking internet access when backend retrieval is available.
 - [x] Fix AI headline queries to use the project news feeds instead of falling back to generic no-internet answers.
 - [x] Short-circuit capability and AI-headline answers in the backend when structured retrieval data is already available.

@@ -1,6 +1,16 @@
 # AI Operator Context
 
-> Scope: turning the existing local Granite chat into a tool-calling operator for My Home Dash.
+> Scope: turning the existing local chat into a tool-calling operator for My Home Dash.
+
+## Runtime Today
+
+- Since 2026-11-22 the operator runs on **Bonsai 2 27B**, served by PrismML's llama.cpp fork at
+  `http://127.0.0.1:1080` through the OpenAI-compatible `/v1/chat/completions` API. Granite 3.3
+  via Ollama is retired (see `support/local_ai/decisions.md` Decision 9).
+- Verified live on 2026-11-24: asked for the current date and time, Bonsai returned a native
+  `tool_calls` entry for `get_current_datetime`, the loop ran it, and the final answer matched
+  the tool result.
+- The section below describes the state when this workstream started, with Granite on Ollama.
 
 ## Current System State (before this workstream)
 
@@ -17,11 +27,11 @@
 
 ## What This Workstream Adds
 
-- A real tool registry (`modules/operator_tools.py`) with JSON-schema tool definitions Ollama's
-  `/api/chat` `tools` parameter understands, plus Python handlers.
+- A real tool registry (`modules/operator_tools.py`) with JSON-schema tool definitions in the
+  `tools` format both Ollama and OpenAI-compatible servers understand, plus Python handlers.
 - A new Flask route `/api/operator` implementing the tool-calling loop: send messages + tools
-  to Ollama, if the model returns `tool_calls`, execute them against the registry, feed results
-  back as `role: "tool"` messages, call Ollama again, repeat up to a small max, then return the
+  to the model, if it returns `tool_calls`, execute them against the registry, feed results
+  back as `role: "tool"` messages, call the model again, repeat up to a small max, then return the
   final answer plus a trace of which tools ran.
 - A dedicated `/operator` page reusing the existing chat UI pattern (`partials/chat.html`,
   `dashboard.js`) so the feature is actually usable, not just curl-testable.
@@ -41,23 +51,33 @@
 | `my-home-dash/static/dashboard.js` | Gets a second chat-panel IIFE targeting the operator endpoint |
 | `my-home-dash/support/local_ai/*.md` | Prior workstream this one builds on; do not contradict its decisions about `/api/chat` |
 
-## Ollama Tool-Calling Contract (as used here)
+## Tool-Calling Contract (as used here)
 
-1. POST `/api/chat` to Ollama with `messages`, `tools` (array of
+`app.py::_call_llm_raw` speaks two dialects and normalizes both to `{"model", "message"}`.
+Bonsai uses the OpenAI-compatible one. The Ollama one remains only for the fallback case where
+Bonsai is down and Ollama already has a model loaded.
+
+1. POST `/v1/chat/completions` to Bonsai with `messages`, `tools` (array of
    `{type: "function", function: {name, description, parameters}}`), `stream: false`.
-2. If the model wants a tool, the response message includes `tool_calls`: a list of
-   `{function: {name, arguments}}`.
-3. For each tool call, the backend executes the matching registry handler and appends a new
-   message `{role: "tool", content: <json-encoded result>}` to the conversation.
-4. The backend calls Ollama again with the extended message list. Repeat until the model
-   returns a plain content reply or the iteration cap is hit.
-5. `granite3.3:8b` supports function calling per IBM's model card; this has not yet needed a
-   fallback model, but `llama3.2:3b` was already identified in `system_capacity.md` as a
-   lower-latency fallback if needed.
+2. If the model wants a tool, `choices[0].message.tool_calls` is a list of
+   `{id, type, function: {name, arguments}}`.
+3. For each call, the backend runs the matching registry handler and appends
+   `{role: "tool", content: <json-encoded result>}` to the conversation.
+4. The backend calls the model again with the extended message list. This repeats until the
+   model returns a plain content reply or the 4-round cap is hit.
+
+Two differences from the original Ollama contract are handled in `_run_operator`:
+
+- **`arguments` is a JSON string** in the OpenAI format (Ollama returns an object).
+  `_parse_tool_arguments` normalizes both to a dict before `operator_tools.dispatch`, so
+  handlers always receive a dict. Arguments that are not a JSON object come back to the model
+  as an error result, and the handler is not called.
+- **Tool results carry `tool_call_id`** copied from the call's `id`, as the OpenAI format
+  expects. Ollama calls have no `id`, so the field is omitted for them.
 
 ## Hard Constraints
 
-- No tool executes in the browser — only backend Python calls Ollama and runs handlers.
+- No tool executes in the browser — only backend Python calls the model and runs handlers.
 - The tool-calling loop must cap iterations (planned: 4) to avoid runaway loops.
 - Tools that are `action: true` are not yet implemented in this phase; when they are, they must
   require confirmation before executing (see `decisions.md` Decision 1 and 3).
@@ -80,5 +100,5 @@
   (weather, news, irrigation project) before attempting any action tool.
 - Do not let the operator and the plain chat paths merge into one endpoint — keeping them
   separate preserves the local_ai workstream's decision to keep chat simple and non-streaming.
-- Re-verify tool-calling behavior with `ollama ps` / a manual curl test after any Ollama
-  version change, since function-calling support can vary by runtime version.
+- Re-verify tool-calling behavior with a live operator request after any change to the Bonsai
+  runtime or model file, since function-calling support can vary by runtime version.

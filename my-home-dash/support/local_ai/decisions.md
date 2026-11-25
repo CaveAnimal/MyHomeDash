@@ -18,7 +18,7 @@ This document records the key implementation choices for the local AI chat capab
 
 ## Decision 2: Standardize On `granite3.3:8b` As The Default Model
 
-- Status: accepted
+- Status: superseded by Decision 9 (2026-11-24)
 - Decision: Default model configuration is `granite3.3:8b`.
 - Why: The existing system capacity and benchmark work shows it fits the RTX 3060 12 GiB envelope well enough for practical local interaction while remaining strong enough for assistant-style tasks.
 - Alternatives considered:
@@ -59,7 +59,7 @@ This document records the key implementation choices for the local AI chat capab
 
 ## Decision 5: Warm The Model Through Windows Startup Automation
 
-- Status: accepted
+- Status: superseded by Decision 9 (2026-11-24)
 - Decision: Use `start_granite3_3_8b.ps1` and its CMD wrapper to pull, warm, and verify the model on this machine.
 - Why: The main operational risk is that Ollama is unavailable or the model is not GPU-resident when the dashboard is used. Startup automation reduces that risk.
 - Alternatives considered:
@@ -95,3 +95,53 @@ This document records the key implementation choices for the local AI chat capab
   - The folder acts as the working area for local AI enablement.
   - Documentation should stay synchronized with the scripts here.
 - Rollback path: Split generated reports from hand-authored docs later if the folder becomes too crowded.
+
+## Decision 8: Auto-Detect Whichever Model Is Loaded In GPU VRAM, Fall Back To Granite
+
+- Status: superseded by Decision 9 (2026-11-24)
+- Decision: At chat request time, the backend queries Ollama's `/api/ps` and, if that reports
+  nothing loaded, LM Studio's `/api/v0/models` (which exposes a `state: "loaded"` field per
+  model). Whichever backend reports a resident model is used for that request. If neither
+  reports a loaded model, the code falls back to `config.yaml`'s `llm.model`
+  (`granite3.3:8b`) via Ollama, exactly as before.
+- Why: This machine now also runs LM Studio, and only one runtime tends to hold the GPU at a
+  time. Hardcoding Granite meant the dashboard could sit idle waiting on Ollama to cold-load a
+  model while a different model was already warm in VRAM. Detecting the resident model lets the
+  dashboard use whatever is already paid for in load time, without abandoning Granite as the
+  documented default.
+- Alternatives considered:
+  - Add a config flag to pick Ollama vs. LM Studio: rejected because it requires the user to
+    remember to flip it every time they switch runtimes; detection removes that step entirely.
+  - Only support Ollama and require the user to load models exclusively through it: rejected
+    because it would force LM Studio out of the workflow rather than working with it.
+- Consequences:
+  - `_call_llm_chat` and the operator loop's `_call_llm_raw` now branch on backend
+    (`ollama`'s native `/api/chat` vs. LM Studio's OpenAI-compatible `/v1/chat/completions`)
+    and normalize both response shapes to the same `{"model", "message"}` envelope.
+  - Two local probe requests (short 2s timeout each) run before every chat call. Both are
+    lightweight metadata endpoints, so this stays fast when either service is up, and fails
+    closed to the Granite fallback quickly when neither is reachable.
+  - The `model` field returned to the browser now reflects whatever actually answered, not the
+    static config value.
+  - `config.yaml` gained `llm.lm_studio_base_url` (defaults to `http://127.0.0.1:1234`).
+- Rollback path: Remove `_detect_gpu_backend`/`_resolve_llm_target` and have `_call_llm_raw`
+  always target `llm.base_url`/`llm.model` directly, restoring the original Granite-only path.
+
+## Decision 9: Retire Granite; Bonsai 2 27B Is The Only Default Model
+
+- Status: accepted (2026-11-24). Supersedes Decision 2, Decision 5's Granite startup scripts,
+  and the Granite fallback in Decision 8.
+- Decision: Chat targets Bonsai 2 27B, served by PrismML's llama.cpp fork on
+  `http://127.0.0.1:1080`. `start_or_restart_mhd.ps1` starts Bonsai through
+  `E:\AI\models\Bonsai\Bonsai-demo\scripts\start_llama_server.ps1` when it is not already
+  running. `start_granite3_3_8b.ps1` and `start_granite3_3_8b.cmd` have been deleted, and
+  `llm.model: granite3.3:8b` has been removed from `config.yaml`.
+- Why: The user chose to stop using Granite. Bonsai already runs on this machine, and it emits
+  native `tool_calls`.
+- Consequences:
+  - Ollama and LM Studio are still checked, but only when Bonsai is down and only for a model
+    that is already loaded. Neither is ever asked to load a model.
+  - `benchmark_ollama_model.py` still defaults to `--model granite3.3:8b`. Pass `--model`
+    explicitly if you use it.
+  - Earlier docs in this folder that mention Granite describe history, not current behavior.
+- Rollback path: Restore the two scripts from git history and re-add `llm.model`.

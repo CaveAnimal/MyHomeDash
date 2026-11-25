@@ -2,15 +2,15 @@
 
 ## Primary Objective
 
-Evolve the local Granite chat experience into an "operator" that can call real tools against
+Evolve the local chat experience (now Bonsai 2 27B; originally Granite 3.3) into an "operator" that can call real tools against
 My Home Dash's own data and actions, instead of only producing text answers.
 
 ## Why This Matters
 
 - The Local AI chat (`support/local_ai`) explicitly scoped out tool-calling and multi-step
   orchestration. This workstream is where that excluded work happens.
-- The system capacity report already identified `granite3.3:8b` as a good local fit for
-  function-calling agent loops on this hardware — this workstream puts that to use.
+- The local model emits native structured `tool_calls` (originally `granite3.3:8b`; since
+  2026-11-22 Bonsai 2 27B), so function-calling agent loops are practical on this hardware.
 - A dashboard that can *act* (not just describe) is more useful day-to-day than one that only
   narrates status.
 
@@ -19,7 +19,7 @@ My Home Dash's own data and actions, instead of only producing text answers.
 - [ ] The operator can call at least one real tool (`get_dashboard_status`) and use its result
       to answer a question truthfully instead of guessing.
 - [ ] The tool-calling loop is bounded (max iterations) and fails visibly, never hangs, if
-      Ollama or a tool errors.
+      the model runtime or a tool errors.
 - [ ] Every tool the operator can call is registered with an explicit `action: bool` flag
       distinguishing read-only tools from state-changing ones.
 - [ ] The user can see which tools were called and with what result (transparency), not just
@@ -30,7 +30,7 @@ My Home Dash's own data and actions, instead of only producing text answers.
 ## In Scope
 
 - A tool registry (name, JSON-schema parameters, Python handler, `action` flag).
-- A bounded tool-calling loop in Flask that talks to Ollama's `tools` API and executes calls
+- A bounded tool-calling loop in Flask that offers `tools` to the local model and executes calls
   against the registry.
 - A first read-only tool surfacing dashboard/module health so the operator can answer
   "is everything working?" truthfully.
@@ -49,12 +49,12 @@ My Home Dash's own data and actions, instead of only producing text answers.
 
 ## Non-Negotiable Constraints
 
-- Model inference stays local through Ollama; no cloud LLM calls.
+- Model inference stays local (Bonsai via llama.cpp); no cloud LLM calls.
 - Tool execution happens in backend Python, never in the browser.
 - Any tool marked `action: true` requires explicit confirmation before it runs — the model
   proposing a call is not sufficient authorization by itself.
 - The tool-calling loop must have a hard iteration cap so a confused model can't loop forever.
-- Failures (Ollama down, tool exception, malformed tool call) must return a visible error, not
+- Failures (model runtime down, tool exception, malformed tool call) must return a visible error, not
   a hang or a silent wrong answer.
 
 ## Target End State
@@ -70,4 +70,4 @@ before any action tool is added.
 
 This phase is complete when a user can ask the operator a status-style question, watch it call
 `get_dashboard_status`, and get a truthful answer grounded in that tool's result — with the
-tool call visible in the UI and the whole path failing gracefully if Ollama or the tool breaks.
+tool call visible in the UI and the whole path failing gracefully if the model runtime or the tool breaks.

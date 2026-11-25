@@ -14,9 +14,12 @@
 - [x] Add frontend chat behavior for submit, clear, local history, and status text.
 - [x] Add Flask backend proxy route at `/api/chat`.
 - [x] Add configurable local LLM settings in `config.yaml`.
-- [x] Create Windows startup automation for Granite 3.3 warmup.
+- [x] Create Windows startup automation for Granite 3.3 warmup (since retired).
 - [x] Create system capacity and benchmark tooling for local model validation.
-- [x] Verify that `granite3.3:8b` can be loaded locally on GPU on this workstation.
+- [x] Verify that `granite3.3:8b` can be loaded locally on GPU on this workstation (since retired).
+- [x] Switch the default model to Bonsai 2 27B; `start_or_restart_mhd.ps1` now starts Bonsai if needed (2026-11-22).
+- [x] Fix the Bonsai port mismatch (app looked on 8080; launcher uses 1080) (2026-11-22).
+- [x] Delete the Granite startup scripts and update this folder's docs for Bonsai (2026-11-24).
 - [x] Create supporting planning documents in `support/local_ai/`.
 
 ## Active Work Queue
@@ -24,12 +27,12 @@
 ### 1. Verify End-To-End Chat Against The Live Local Runtime
 
 - Status: next
-- Why it matters: The code path exists, but the feature should be re-verified from browser to Flask to Ollama after any dashboard or runtime changes.
+- Why it matters: The code path exists, but the feature should be re-verified from browser to Flask to Bonsai after any dashboard or runtime changes.
 - Acceptance criteria:
   - Send a real prompt from the dashboard UI.
   - Confirm the reply renders in the same thread.
-  - Confirm a temporary Ollama outage produces a visible failure state instead of a hang.
-  - Confirm the configured model reported back by the API matches the expected runtime.
+  - Confirm a temporary Bonsai outage produces a visible failure state instead of a hang.
+  - Confirm the model reported back by the API is `bonsai2-27b`.
 
 ### 2. Align Top-Level Documentation With The Implemented Local AI Feature
 
@@ -38,16 +41,16 @@
 - Acceptance criteria:
   - README includes the local AI prerequisites.
   - README explains where to configure model settings.
-  - README links or points to the startup and benchmark scripts in `support/local_ai`.
+  - README points to `start_or_restart_mhd.ps1` and the Bonsai launcher.
 
 ### 3. Add A Dedicated Local AI Health Check Or Readiness Probe
 
 - Status: candidate
 - Why it matters: Right now readiness is inferred through chat or external commands. A dedicated health path would make diagnostics simpler.
 - Acceptance criteria:
-  - A lightweight endpoint reports whether Ollama is reachable.
+  - A lightweight endpoint reports whether Bonsai is reachable (or which fallback is in use).
   - Response includes the configured model and a clear readiness state.
-  - UI can distinguish `ready`, `warming`, and `unavailable` more precisely if desired.
+  - UI can distinguish `ready`, `loading`, and `unavailable` more precisely if desired.
 
 ### 4. Tighten Request Validation And Failure Messaging
 
@@ -71,5 +74,6 @@
 
 - Do not treat this feature as greenfield anymore.
 - Preserve the existing backend proxy architecture unless there is a strong reason to change it.
-- Re-run GPU verification with `ollama ps` and `nvidia-smi` after any runtime or model changes.
+- Re-run GPU verification with `Invoke-RestMethod http://127.0.0.1:1080/v1/models` and `nvidia-smi` after any runtime or model changes.
+- Bonsai reasons before answering: give requests enough `max_tokens` or the content can come back empty.
 - Prefer small hardening steps over major refactors.

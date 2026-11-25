@@ -1,6 +1,127 @@
 /* ── My Home Dash — Dashboard JS ─────────────────────────────────────────── */
 
 /**
+ * Surface failed HTMX requests instead of letting them no-op. htmx does not
+ * swap non-2xx responses, so without this a 404 (e.g. a route added since the
+ * server last restarted) or a 500 just looks like a dead button.
+ */
+(function () {
+  "use strict";
+
+  function reportFailure(evt, message) {
+    const target =
+      evt.detail && evt.detail.target && document.body.contains(evt.detail.target)
+        ? evt.detail.target
+        : evt.target;
+    if (!target) return;
+    const note = document.createElement("div");
+    note.className = "alert alert-danger py-2 px-3 small mb-2";
+    note.setAttribute("role", "alert");
+    note.textContent = message;
+    target.prepend(note);
+  }
+
+  document.body.addEventListener("htmx:responseError", function (evt) {
+    const status = evt.detail && evt.detail.xhr ? evt.detail.xhr.status : "?";
+    const path = evt.detail && evt.detail.pathInfo ? evt.detail.pathInfo.requestPath : "";
+    reportFailure(
+      evt,
+      `Request failed (HTTP ${status})${path ? ` for ${path}` : ""}. ` +
+        `If this route is new, restart the dashboard server.`
+    );
+  });
+
+  document.body.addEventListener("htmx:sendError", function (evt) {
+    reportFailure(evt, "Could not reach the dashboard server. Is it still running?");
+  });
+})();
+
+/**
+ * Home Outlook calendar event form. Event delegation keeps the controls live
+ * when HTMX replaces the calendar partial after a refresh.
+ */
+(function () {
+  "use strict";
+
+  function setFormVisible(form, toggle, visible) {
+    form.classList.toggle("d-none", !visible);
+    toggle?.setAttribute("aria-expanded", String(visible));
+    if (visible) form.querySelector("[name='subject']")?.focus();
+  }
+
+  function setStatus(form, message) {
+    const status = form.querySelector(".mhd-calendar-form-status");
+    status.textContent = message;
+    status.className = "mhd-calendar-form-status alert alert-danger py-1 px-2 small";
+  }
+
+  document.addEventListener("click", function (event) {
+    const toggle = event.target.closest(".mhd-calendar-form-toggle");
+    if (toggle) {
+      const form = document.getElementById("mhd-calendar-form");
+      if (form) setFormVisible(form, toggle, form.classList.contains("d-none"));
+      return;
+    }
+
+    const cancel = event.target.closest(".mhd-calendar-form-cancel");
+    if (cancel) {
+      const form = cancel.closest("form");
+      setFormVisible(form, document.querySelector(".mhd-calendar-form-toggle"), false);
+    }
+  });
+
+  document.addEventListener("change", function (event) {
+    if (!event.target.matches("#mhd-calendar-all-day")) return;
+    const form = event.target.closest("form");
+    const timeFields = form.querySelector(".mhd-calendar-time-fields");
+    const timed = !event.target.checked;
+    timeFields.classList.toggle("d-none", !timed);
+    timeFields.querySelectorAll("input").forEach((input) => { input.required = timed; });
+  });
+
+  document.addEventListener("submit", async function (event) {
+    if (!event.target.matches("#mhd-calendar-form")) return;
+    event.preventDefault();
+    const form = event.target;
+    if (!form.reportValidity()) return;
+
+    const submit = form.querySelector("button[type='submit']");
+    const data = new FormData(form);
+    submit.disabled = true;
+
+    try {
+      const response = await fetch("/api/calendar/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: data.get("subject"),
+          date: data.get("date"),
+          all_day: data.get("all_day") === "on",
+          start_time: data.get("start_time"),
+          end_time: data.get("end_time"),
+          location: data.get("location"),
+          notes: data.get("notes"),
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Could not add the event.");
+      // Redraw whichever view (day/week/month + anchor) is currently on screen.
+      const toolbar = document.querySelector(".mhd-cal-toolbar");
+      const view = toolbar?.dataset.calView || "day";
+      const anchor = toolbar?.dataset.calAnchor || "";
+      htmx.ajax(
+        "GET",
+        `/api/calendar/view?view=${encodeURIComponent(view)}&anchor=${encodeURIComponent(anchor)}`,
+        { target: "#section-calendar", swap: "innerHTML" }
+      );
+    } catch (error) {
+      setStatus(form, error.message || "Could not add the event.");
+      submit.disabled = false;
+    }
+  });
+})();
+
+/**
  * Live clock — updates every 30 seconds without a page reload.
  */
 (function () {
@@ -149,8 +270,8 @@
     if (!chart.scales || !chart.scales.x) return;
 
     const idx = points.findIndex((p) => p.time === "12 AM");
-    const topRow = canvas.closest(".card-body")?.querySelector(".mhd-weather-top-row");
-    const label = topRow?.querySelector(".mhd-weather-midnight-label");
+    const panel = canvas.closest(".mhd-weather-summary-view");
+    const label = panel?.querySelector(".mhd-weather-midnight-label");
     if (!label) return;
 
     // No 12 AM point in this 24h window (only possible if the window starts
@@ -163,7 +284,7 @@
     label.querySelector(".mhd-weather-midnight-before").textContent = points[idx - 1].full_date || "";
     label.querySelector(".mhd-weather-midnight-after").textContent = points[idx].full_date || "";
 
-    const anchorRect = topRow.getBoundingClientRect();
+    const anchorRect = panel.getBoundingClientRect();
     const canvasRect = canvas.getBoundingClientRect();
     const pixelX = chart.scales.x.getPixelForValue(idx);
 
@@ -240,8 +361,60 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", initWeatherCharts);
-  document.body.addEventListener("htmx:afterSwap", initWeatherCharts);
+  function applyWeatherViewState(card, view) {
+    const summary = card.querySelector(".mhd-weather-summary-view");
+    const summaryHeader = card.querySelector(".mhd-weather-summary-header");
+    const forecast = card.querySelector(".mhd-weather-forecast-view");
+    if (!summary || !forecast) return;
+
+    const isForecast = view === "forecast";
+    summary.classList.toggle("d-none", isForecast);
+    if (summaryHeader) summaryHeader.classList.toggle("d-none", isForecast);
+    forecast.classList.toggle("d-none", !isForecast);
+
+    card.querySelectorAll(".mhd-weather-view-switch").forEach((toggle) => {
+      const active = toggle.dataset.weatherView === view;
+      toggle.classList.toggle("active", active);
+      toggle.classList.toggle("btn-primary", active);
+      toggle.classList.toggle("btn-outline-primary", !active);
+      toggle.classList.toggle("btn-secondary", !active && view === "forecast");
+      toggle.classList.toggle("btn-outline-secondary", !active && view !== "forecast");
+      toggle.setAttribute("aria-pressed", String(active));
+    });
+  }
+
+  function initWeatherViewToggles() {
+    document.querySelectorAll(".mhd-weather-view-switch").forEach((button) => {
+      button.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const card = button.closest(".mhd-weather-bar");
+        if (!card) return;
+        applyWeatherViewState(card, button.dataset.weatherView);
+      };
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".mhd-weather-view-switch");
+    if (!button) return;
+
+    const card = button.closest(".mhd-weather-bar");
+    if (!card) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    applyWeatherViewState(card, button.dataset.weatherView);
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    initWeatherCharts();
+    initWeatherViewToggles();
+  });
+  document.body.addEventListener("htmx:afterSwap", () => {
+    initWeatherCharts();
+    initWeatherViewToggles();
+  });
 })();
 
 /**

@@ -30,6 +30,12 @@
   <div class="navbar-nav flex-row gap-2 me-3 mhd-nav-links">
     <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{{ url_for('index') }}">Home</a>
     <a class="nav-link {% if active_page == 'irrigation' %}active{% endif %}" href="{{ url_for('irrigation_project') }}">Irrigation</a>
+    <a class="nav-link {% if active_page == 'page2' %}active{% endif %}" href="{{ url_for('page2') }}">Page2</a>
+    <a class="nav-link {% if active_page == 'spam' %}active{% endif %}" href="{{ url_for('spam_page') }}">Spam</a>
+    <a class="nav-link {% if active_page == 'llc' %}active{% endif %}" href="{{ url_for('llc_page') }}">LLC</a>
+    <a class="nav-link {% if active_page == 'adobe' %}active{% endif %}" href="{{ url_for('adobe_page') }}">Adobe</a>
+    <a class="nav-link {% if active_page == 'microsoft' %}active{% endif %}" href="{{ url_for('microsoft_page') }}">Microsoft</a>
+    <a class="nav-link {% if active_page == 'chair_tai_chi' %}active{% endif %}" href="{{ url_for('chair_tai_chi') }}">Tai Chi</a>
     <a class="nav-link {% if active_page == 'ai_news' %}active{% endif %}" href="{{ url_for('ai_news') }}">AI News</a>
     <a class="nav-link {% if active_page == 'ai_chat' %}active{% endif %}" href="{{ url_for('ai_chat') }}">AI Chat</a>
     <a class="nav-link {% if active_page == 'operator' %}active{% endif %}" href="{{ url_for('operator_page') }}">AI Operator</a>

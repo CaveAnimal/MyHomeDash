@@ -7,22 +7,16 @@ Current temporary state:
 
 ## Deferred Work
 
-### Calendar — done (via ICS), Graph path still deferred
-- Working: `CALENDAR_ICS_URL` in `.env` points `modules/calendar_mod.py` at a published,
-  read-only ICS feed — no Azure app registration needed. Currently set to Google's public
-  US Holidays feed as a live placeholder; replace it with your own published Outlook/Exchange
-  calendar URL (Outlook Web → Settings → Calendar → Shared calendars → Publish a calendar) to
-  see your real events instead of holidays.
-- Verified: all-day events, timed events with attendees and an embedded meeting link, and
-  daily-recurring events all parse and render correctly (synthetic test); the live feed fetches
-  and renders with a 200 and correct "no events today" state.
-- Still deferred: both Microsoft Graph paths (work Outlook, home Outlook) remain blocked on
-  real Azure App Registration credentials, which requires interactive login to
-  portal.azure.com — not something an agent can complete unattended. The Graph code path is
-  untouched and still available: replace placeholder `MICROSOFT_WORK_CLIENT_ID` /
-  `MICROSOFT_WORK_TENANT_ID` in `.env`, run `python auth\setup_microsoft_work.py`, and persist a
-  valid token in `auth/tokens/msal_work.json`. `calendar_mod.fetch()` prefers `CALENDAR_ICS_URL`
-  when set and only falls back to Graph when it's empty.
+### Calendar — done (Home Outlook via Microsoft Graph)
+- `calendar.source: graph` and `calendar.account: home_outlook` route the dashboard calendar
+  through the authenticated personal Outlook account.
+- The Home Outlook app registration and token include delegated `Calendars.ReadWrite` permission.
+- The Calendar card can create all-day entries and timed appointments with optional location
+  and notes; successful additions refresh the card immediately.
+- Verified live Graph access, silent token refresh, local-time day boundaries, and the rendered
+  dashboard state. The account currently has no events today or in the next 30 days.
+- The published ICS path remains available by setting `calendar.source: ics` and
+  `CALENDAR_ICS_URL`.
 
 ### Email
 

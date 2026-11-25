@@ -18,7 +18,7 @@
         placeholder="Ask the operator something it can check, e.g. 'is the dashboard working?'"
       ></textarea>
       <div class="d-flex align-items-center justify-content-between mt-2 gap-2">
-        <small class="text-body-secondary">Model: {{ cfg.get('llm', {}).get('model', 'granite3.3:8b') }}</small>
+        <small class="text-body-secondary">Model: {{ active_model or cfg.get('llm', {}).get('bonsai_model', 'bonsai2-27b') }}</small>
         <div class="d-flex gap-2">
           <button type="button" id="operator-clear" class="btn btn-outline-secondary btn-sm">Clear</button>
           <button type="submit" id="operator-send" class="btn btn-success btn-sm">

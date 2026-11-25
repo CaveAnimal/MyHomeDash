@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Anonymous LLC | My Home Dash{% endblock %}
+
+{% block content %}
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-warning-emphasis mb-2">Business</div>
+        <h1 class="h3 mb-2">Starting an anonymous LLC.</h1>
+        <p class="mb-0 text-body-secondary">A privacy-focused LLC keeps your name off <em>public</em> records. It is not hidden from the IRS, your bank, or a court.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="alert alert-warning d-flex gap-2 mb-3" role="alert">
+  <i class="bi bi-exclamation-triangle-fill"></i>
+  <div>General information, not legal or tax advice. Fees and rules change; confirm each figure on the state's own website, and consider a one-hour consult with a business attorney before filing.</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-7">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-signpost-split me-2"></i>What "anonymous" really means</h2>
+        <ul class="mb-0">
+          <li><strong>Public anonymity:</strong> member/owner names do not appear in the state's searchable records. Achieved by choosing a privacy-friendly state and using a registered agent.</li>
+          <li><strong>Not anonymous to the IRS:</strong> you still need an EIN, and the "responsible party" must be a real person with an SSN or ITIN.</li>
+          <li><strong>Not anonymous to banks:</strong> they must verify owners under federal know-your-customer rules.</li>
+          <li><strong>Not a shield for wrongdoing:</strong> courts can pierce the LLC for fraud, commingled funds, or ignored formalities.</li>
+          <li><strong>Federal ownership reporting:</strong> FinCEN's Beneficial Ownership (BOI) rule was narrowed in 2025 to exempt U.S.-formed companies. Verify the current status at fincen.gov before you file.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-5">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-list-check me-2"></i>Checklist</h2>
+        <div id="llc-checklist" class="d-flex flex-column gap-2">
+          {% for item in [
+            'Pick a state (see comparison)',
+            'Choose a name and check availability',
+            'Hire a registered agent (their address goes on file)',
+            'File Articles of Organization (no member names)',
+            'Write an operating agreement (kept private)',
+            'Get an EIN free at irs.gov',
+            'Open a business bank account',
+            'Set a calendar reminder for annual reports/fees',
+            'Keep finances strictly separate from personal'
+          ] %}
+          <div class="form-check">
+            <input class="form-check-input llc-check" type="checkbox" id="llc-c{{ loop.index }}" data-key="llc-c{{ loop.index }}">
+            <label class="form-check-label" for="llc-c{{ loop.index }}">{{ item }}</label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3"><i class="bi bi-geo-alt me-2"></i>State comparison</h2>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-2">
+        <thead>
+          <tr><th>State</th><th>Member names public?</th><th>Approx. filing fee</th><th>Ongoing cost</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>New Mexico</td><td>No</td><td>~$50</td><td>No annual report or franchise fee</td><td>Cheapest to maintain; best if you live there or want lowest cost.</td></tr>
+          <tr><td>Wyoming</td><td>No</td><td>~$100</td><td>~$60+ annual report license tax</td><td>Strong privacy and asset-protection reputation.</td></tr>
+          <tr><td>Delaware</td><td>No</td><td>~$110</td><td>$300 annual tax</td><td>Best-known courts; usually overkill for a small business.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small text-body-secondary mb-0">If you operate in another state (where you live or work), you generally must also register there as a foreign LLC, which can publish more information. For a local business, forming in your home state is often simpler even if it is less private.</p>
+  </div>
+</section>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-1-circle me-2"></i>Step by step</h2>
+        <ol class="mb-0">
+          <li class="mb-2"><strong>Choose the state</strong> using the table above.</li>
+          <li class="mb-2"><strong>Pick a name</strong> ending in "LLC" and search the state's business-entity database.</li>
+          <li class="mb-2"><strong>Engage a registered agent</strong> (typically $50–$150/yr). Use their address, not your home.</li>
+          <li class="mb-2"><strong>File the Articles of Organization</strong> online with the Secretary of State, listing the agent and a business mailing address.</li>
+          <li class="mb-2"><strong>Draft the operating agreement</strong> naming the members. It stays internal.</li>
+          <li class="mb-2"><strong>Apply for an EIN</strong> on irs.gov. It is free; ignore sites that charge.</li>
+          <li class="mb-2"><strong>Open a bank account</strong> with the formation documents and EIN letter.</li>
+          <li><strong>Stay compliant:</strong> annual reports, taxes, and separate books.</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-incognito me-2"></i>Extra privacy options</h2>
+        <ul class="mb-3">
+          <li><strong>Virtual mailbox or business address</strong> instead of your home on public filings.</li>
+          <li><strong>Business phone number</strong> (VoIP) rather than your personal one.</li>
+          <li><strong>Domain WHOIS privacy</strong> for the company website.</li>
+          <li><strong>Nominee or manager-managed structure</strong> via an attorney: more complex, and still disclosed to banks and the IRS.</li>
+        </ul>
+        <h2 class="h6 mb-2">Rough first-year cost</h2>
+        <p class="mb-0 text-body-secondary">New Mexico: about $50 filing + ~$100 agent = <strong>~$150</strong>. Wyoming: about $100 + ~$100 + ~$60 = <strong>~$260</strong>. Add a virtual address ($10–$30/mo) if wanted.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3"><i class="bi bi-link-45deg me-2"></i>Official sources</h2>
+    <ul class="mb-0">
+      <li><a href="https://www.irs.gov/businesses/small-businesses-self-employed/get-an-employer-identification-number" target="_blank" rel="noopener">IRS: get an EIN (free)</a></li>
+      <li><a href="https://www.fincen.gov/boi" target="_blank" rel="noopener">FinCEN: Beneficial Ownership Information</a></li>
+      <li><a href="https://www.sos.state.nm.us/" target="_blank" rel="noopener">New Mexico Secretary of State</a></li>
+      <li><a href="https://sos.wyo.gov/" target="_blank" rel="noopener">Wyoming Secretary of State</a></li>
+      <li><a href="https://corp.delaware.gov/" target="_blank" rel="noopener">Delaware Division of Corporations</a></li>
+      <li><a href="https://www.sba.gov/business-guide/launch-your-business/choose-business-structure" target="_blank" rel="noopener">SBA: choose a business structure</a></li>
+    </ul>
+  </div>
+</section>
+
+<script>
+(function () {
+  document.querySelectorAll(".llc-check").forEach(function (box) {
+    var key = "mhd-" + box.dataset.key;
+    try { box.checked = localStorage.getItem(key) === "1"; } catch (e) {}
+    box.addEventListener("change", function () {
+      try { localStorage.setItem(key, box.checked ? "1" : "0"); } catch (e) {}
+    });
+  });
+})();
+</script>
+{% endblock %}

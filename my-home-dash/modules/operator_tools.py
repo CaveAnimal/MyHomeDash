@@ -10,7 +10,11 @@ yet, so that gate is not wired up until the first one is added.
 
 from __future__ import annotations
 
-from config_loader import get_enabled_dashboard_sections
+from datetime import datetime
+
+import pytz
+
+from config_loader import get_config, get_enabled_dashboard_sections
 
 _ALL_SECTIONS = ("weather", "calendar", "email", "github", "teams", "news")
 
@@ -48,7 +52,39 @@ def _get_dashboard_status(arguments: dict, cache: dict) -> dict:
     }
 
 
+def _get_current_datetime(arguments: dict, cache: dict) -> dict:
+    cfg = get_config()
+    tz = pytz.timezone(cfg.get("timezone", "America/New_York"))
+    now = datetime.now(tz=tz)
+    return {
+        "iso": now.isoformat(),
+        "day_of_week": now.strftime("%A"),
+        "date": now.strftime("%B %d, %Y"),
+        "time": now.strftime("%I:%M %p"),
+        "timezone": str(tz),
+    }
+
+
 _REGISTRY = {
+    "get_current_datetime": {
+        "action": False,
+        "handler": _get_current_datetime,
+        "schema": {
+            "type": "function",
+            "function": {
+                "name": "get_current_datetime",
+                "description": (
+                    "Get the real current date, day of the week, and time on this machine. "
+                    "Always use this instead of guessing whenever asked what day, date, or "
+                    "time it is."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {},
+                },
+            },
+        },
+    },
     "get_dashboard_status": {
         "action": False,
         "handler": _get_dashboard_status,

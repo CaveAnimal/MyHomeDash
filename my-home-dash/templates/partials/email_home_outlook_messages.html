@@ -13,11 +13,13 @@
       <input type="checkbox" class="form-check-input mt-1 mhd-email-organize-checkbox flex-shrink-0"
              data-address="{{ msg.from_address }}"
              data-name="{{ msg.from_name }}"
+             data-subject="{{ msg.subject }}"
              data-folder="{{ folder }}"
              title="Move all existing emails from this sender into a new folder">
       <input type="checkbox" class="form-check-input mt-1 mhd-email-organize-checkbox mhd-email-organize-checkbox-rule flex-shrink-0"
              data-address="{{ msg.from_address }}"
              data-name="{{ msg.from_name }}"
+             data-subject="{{ msg.subject }}"
              data-folder="{{ folder }}"
              data-create-rule="1"
              title="Move existing emails AND auto-move all future emails from this sender">

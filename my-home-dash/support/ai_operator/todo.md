@@ -7,6 +7,8 @@
   bounded tool-calling loop, dedicated `/operator` page, plain `/api/chat` unaffected.
 - Discovered and worked around a real Granite 3.3 + Ollama 0.32.1 quirk: any system message
   alongside `tools` breaks structured `tool_calls` (see decisions.md, Decision 6).
+- 2026-11-22: switched to Bonsai 2 27B via llama.cpp (Decision 7). Re-verified the tool loop live
+  on 2026-11-24.
 
 ## Completed
 
@@ -29,10 +31,11 @@
 ### 2. Build The Operator Endpoint
 
 - [x] Add `/api/operator` POST route in `app.py`.
-- [x] Implement the bounded tool-calling loop (cap: 4 rounds) against Ollama's `tools` API.
+- [x] Implement the bounded tool-calling loop (cap: 4 rounds) against Ollama's `tools` API
+      (now Bonsai's OpenAI-compatible API).
 - [x] Return `{content, model, tool_calls: [{name, arguments, result}]}` so the UI can show the
       trace.
-- [x] Fail visibly (never hang) on: Ollama unreachable (502), malformed request (400), unknown
+- [x] Fail visibly (never hang) on: model runtime unreachable (502), malformed request (400), unknown
       tool name (error result fed back to the model), tool exception (caught in `dispatch`),
       empty final content (502).
 - [x] Discover and fix a real regression: system message + `tools` breaks structured
@@ -62,6 +65,16 @@
 - [x] Confirm `/api/chat` (plain chat) still works unchanged after the operator changes.
 - [ ] Click through the actual `/operator` page in a browser (only the API path has been
       verified so far — the UI itself has not been visually exercised).
+
+### 6. Re-Verify On Bonsai (2026-11-24)
+
+- [x] Run the operator loop live against Bonsai: it called `get_current_datetime` through
+      native `tool_calls` and answered from the result.
+- [x] Parse JSON-string tool `arguments` before `dispatch` (`_parse_tool_arguments` in
+      `app.py`). Arguments that don't decode to a JSON object are fed back to the model as an
+      error result instead of reaching the handler.
+- [x] Include `tool_call_id` on `role: "tool"` messages when the call carried an `id` (Ollama
+      calls have none, so nothing is added for them). Verified live: the ids match.
 
 ## Deferred (Next Phase — Action Tools)
 

@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Spam Reports | My Home Dash{% endblock %}
+
+{% block content %}
+<style>.spin-slow{animation:spin 1.5s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}</style>
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-info-emphasis mb-2">Spam</div>
+        <h1 class="h3 mb-2">Spam number reports.</h1>
+        <p class="mb-0 text-body-secondary">
+          Add numbers one at a time, then build a report packet for the batch. The FTC, FCC and other sites only accept
+          reports through their own CAPTCHA-protected forms, so you paste and submit; check off each destination as you go
+          and the date is kept in the history.
+        </p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+<div id="spam-alert"></div>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3">Add a number</h2>
+    <form id="spam-form" class="row g-2 align-items-end">
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1" for="spam-number">Phone number</label>
+        <input class="form-control" id="spam-number" placeholder="(555) 123-4567" inputmode="tel" autocomplete="off" required>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1" for="spam-type">Type</label>
+        <select class="form-select" id="spam-type">
+          <option value="robocall">Robocall</option>
+          <option value="live">Live caller</option>
+          <option value="text">Spam text</option>
+          <option value="scam">Scam / fraud</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label small mb-1" for="spam-when">When (optional)</label>
+        <input class="form-control" id="spam-when" placeholder="Oct 5, ~2pm">
+      </div>
+      <div class="col-12 col-md-3">
+        <button class="btn btn-primary w-100" type="submit"><i class="bi bi-plus-circle me-1"></i>Add to list</button>
+      </div>
+      <div class="col-12">
+        <input class="form-control" id="spam-notes" maxlength="500" placeholder="What they said or wanted (optional)">
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">Waiting to report <span class="badge text-bg-secondary" id="queue-count">0</span></h2>
+      <button class="btn btn-success" id="spam-process" type="button" disabled>
+        <i class="bi bi-send-check me-1"></i>Report these numbers
+      </button>
+    </div>
+    <div id="spam-queue"></div>
+  </div>
+</section>
+
+<section class="card mhd-card mb-3 d-none" id="packet-card">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-1">Report packet <span class="small text-body-secondary" id="packet-id"></span></h2>
+    <p class="small text-body-secondary">
+      Open each destination, paste the text, submit, then tick it in the history below. Ticks are timestamped.
+    </p>
+    <div class="input-group mb-3">
+      <textarea class="form-control" id="packet-text" rows="4" readonly></textarea>
+      <button class="btn btn-outline-secondary" id="packet-copy" type="button"><i class="bi bi-clipboard"></i> Copy all</button>
+    </div>
+    <div class="d-flex flex-wrap gap-2" id="packet-links"></div>
+  </div>
+</section>
+
+<section class="card mhd-card mb-3 d-none" id="filing-card">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-2"><i class="bi bi-robot me-1"></i>Auto-Filer <span class="badge text-bg-info" id="filing-batch"></span></h2>
+    <p class="small text-body-secondary mb-3">
+      The browser is open. When you see <strong>"Waiting for CAPTCHA"</strong>, solve it in the browser, then click Continue below.
+    </p>
+    <div id="filing-sites" class="mb-3"></div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-warning" id="filing-continue" type="button" disabled>
+        <i class="bi bi-play-fill me-1"></i>Continue (CAPTCHA solved)
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="card mhd-card">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h5 mb-0">History <span class="badge text-bg-secondary" id="history-count">0</span></h2>
+      <button class="btn btn-outline-info btn-sm d-none" id="spam-autofile" type="button">
+        <i class="bi bi-robot me-1"></i>Auto-File Unfiled
+      </button>
+    </div>
+    <div id="spam-history"></div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const fmt = (iso) => iso ? new Date(iso).toLocaleString([], {dateStyle: "medium", timeStyle: "short"}) : "";
+  const post = (url, body) => fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
+  const TYPE = {robocall: "Robocall", live: "Live caller", text: "Spam text", scam: "Scam", other: "Other"};
+  let state = {queued: [], history: []};
+
+  function dupBadge(r) {
+    const n = (r.dup_attempts || []).length;
+    return n ? ` <span class="badge text-bg-warning" title="Entered again ${n} time(s)">duplicate entered ×${n}</span>` : "";
+  }
+
+  function renderQueue() {
+    $("queue-count").textContent = state.queued.length;
+    $("spam-process").disabled = !state.queued.length;
+    $("spam-queue").innerHTML = state.queued.length ? `<ul class="list-group">${state.queued.map((r) => `
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div><strong>${esc(r.display)}</strong> <span class="badge text-bg-secondary">${esc(TYPE[r.call_type])}</span>${dupBadge(r)}
+          <div class="small text-body-secondary">${esc([r.when, r.notes].filter(Boolean).join(" · "))}</div></div>
+        <button class="btn btn-sm btn-outline-danger spam-remove" data-e164="${esc(r.e164)}" title="Remove"><i class="bi bi-x-lg"></i></button>
+      </li>`).join("")}</ul>` : '<p class="text-body-secondary small mb-0">Nothing waiting. Add a number above.</p>';
+  }
+
+  function renderHistory() {
+    $("history-count").textContent = state.history.length;
+    const unfiled = state.history.filter(r => !r.reported_to.length);
+    const autoBtn = document.getElementById("spam-autofile");
+    if (autoBtn) autoBtn.classList.toggle("d-none", !unfiled.length);
+    if (!state.history.length) { $("spam-history").innerHTML = '<p class="text-body-secondary small mb-0">No reports yet.</p>'; return; }
+    $("spam-history").innerHTML = state.history.map((r) => `
+      <details class="border rounded p-3 mb-2">
+        <summary class="d-flex flex-wrap justify-content-between gap-2">
+          <span><strong>${esc(r.display)}</strong> <span class="badge text-bg-secondary">${esc(TYPE[r.call_type])}</span>${dupBadge(r)}</span>
+          <span class="small text-body-secondary">Batch ${esc(fmt(r.processed_at))} · ${r.reported_to.length ? "Reported to: " + esc(r.reported_to.join(", ")) : "not filed anywhere yet"}</span>
+        </summary>
+        <ul class="list-group list-group-flush mt-2">${r.destinations.map((d) => `
+          <li class="list-group-item d-flex gap-2 align-items-start">
+            <input class="form-check-input mt-1 spam-done" type="checkbox" data-e164="${esc(r.e164)}" data-dest="${esc(d.id)}" ${d.done_at ? "checked" : ""}>
+            <div class="flex-grow-1">
+              <div class="fw-semibold small">${d.url ? `<a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a>` : esc(d.name)}
+                ${d.done_at ? `<span class="text-success ms-2">✓ ${esc(fmt(d.done_at))}</span>` : ""}</div>
+              <div class="text-body-secondary small">${esc(d.note)}</div>
+            </div>
+          </li>`).join("")}</ul>
+        ${(r.dup_attempts || []).length ? `<div class="small text-warning-emphasis mt-2">Re-entered: ${r.dup_attempts.map((t) => esc(fmt(t))).join("; ")}</div>` : ""}
+      </details>`).join("");
+  }
+
+  async function load() {
+    state = await (await fetch("/api/spam")).json();
+    renderQueue();
+    renderHistory();
+  }
+
+  function showAlert(html) {
+    $("spam-alert").innerHTML = `<div class="alert alert-warning alert-dismissible" role="alert">${html}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    window.scrollTo({top: 0, behavior: "smooth"});
+  }
+
+  $("spam-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("spam-alert").innerHTML = "";
+    const res = await post("/api/spam", {
+      number: $("spam-number").value, call_type: $("spam-type").value,
+      when: $("spam-when").value, notes: $("spam-notes").value,
+    });
+    const body = await res.json();
+    if (res.status === 409) {
+      const x = body.existing;
+      const where = x.status === "queued"
+        ? "It is already in the waiting list."
+        : `It was already batched on ${esc(fmt(x.processed_at))}` +
+          (x.reported_to.length ? ` and reported to ${esc(x.reported_to.join(", "))}.` : " but not filed with any destination yet.");
+      showAlert(`<strong>Duplicate:</strong> ${esc(x.display)} is already on file. ${where} It was not added again.`);
+      $("spam-number").select();
+    } else if (!res.ok) {
+      showAlert(esc(body.error || "Could not save."));
+    } else {
+      e.target.reset();
+      $("spam-number").focus();
+    }
+    load();
+  });
+
+  $("spam-queue").addEventListener("click", async (e) => {
+    const btn = e.target.closest(".spam-remove");
+    if (btn) { await post("/api/spam/remove", {e164: btn.dataset.e164}); load(); }
+  });
+
+  $("spam-process").addEventListener("click", async () => {
+    const res = await post("/api/spam/process");
+    const body = await res.json();
+    if (!res.ok) { showAlert(esc(body.error)); return; }
+    $("packet-card").classList.remove("d-none");
+    $("packet-id").textContent = `· ${body.numbers.length} number(s), ${fmt(body.processed_at)}`;
+    $("packet-text").value = body.packet_text;
+    $("packet-links").innerHTML = body.numbers[0].destinations.filter((d) => d.url && !d.url.includes("800notes"))
+      .map((d) => `<a class="btn btn-outline-primary btn-sm" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a>`).join("");
+    $("packet-card").scrollIntoView({behavior: "smooth"});
+    await load();
+    const first = document.querySelector("#spam-history details");
+    if (first) first.open = true;
+  });
+
+  $("packet-copy").addEventListener("click", () => navigator.clipboard.writeText($("packet-text").value));
+
+  // --- Auto-Filer UI ---
+  const STATUS_ICON = {
+    idle: "bi-circle text-secondary",
+    launching: "bi-hourglass-split text-info spin-slow",
+    filling: "bi-pencil-square text-primary",
+    "waiting-captcha": "bi-exclamation-triangle-fill text-warning",
+    submitting: "bi-send text-success",
+    done: "bi-check-circle-fill text-success",
+    error: "bi-x-circle-fill text-danger",
+  };
+
+  function renderFiling(data) {
+    if (!data || !data.active) {
+      if ($("filing-card").classList.contains("d-none")) return;
+      // Session ended — reload history to pick up done marks
+      load();
+      return;
+    }
+    $("filing-card").classList.remove("d-none");
+    $("filing-batch").textContent = data.batch_id || "";
+    const sites = Object.values(data.sites || {});
+    const anyWaiting = sites.some(s => s.status === "waiting-captcha");
+    $("filing-continue").disabled = !anyWaiting;
+    $("filing-sites").innerHTML = sites.map(s => `
+      <div class="d-flex align-items-center gap-2 mb-2 p-2 rounded border ${s.status === "waiting-captcha" ? "border-warning bg-warning-subtle" : ""}">
+        <i class="bi ${STATUS_ICON[s.status] || STATUS_ICON.idle} fs-5"></i>
+        <div class="flex-grow-1">
+          <div class="fw-semibold">${esc(s.site_name)}
+            <span class="badge ${s.status === "waiting-captcha" ? "text-bg-warning" : s.status === "done" ? "text-bg-success" : s.status === "error" ? "text-bg-danger" : "text-bg-secondary"}">${esc(s.status)}</span>
+          </div>
+          <div class="small text-body-secondary">${esc(s.step)}${s.error ? ` — ${esc(s.error)}` : ""}</div>
+        </div>
+      </div>`).join("");
+  }
+
+  let filingPoll = null;
+  async function pollFiling() {
+    try {
+      const res = await fetch("/api/spam/file/status");
+      const data = await res.json();
+      renderFiling(data);
+      if (!data.active) { clearInterval(filingPoll); filingPoll = null; $("filing-card").classList.add("d-none"); load(); }
+    } catch {}
+  }
+
+  $("filing-continue").addEventListener("click", async () => {
+    $("filing-continue").disabled = true;
+    await post("/api/spam/file/continue");
+  });
+
+  // "Auto-File" button in history — start filing unfiled numbers
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("#spam-autofile");
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Launching browser…';
+    const res = await post("/api/spam/file", {sites: ["ftc", "fcc", "bbb"]});
+    if (!res.ok) {
+      const body = await res.json();
+      showAlert(esc(body.error || "Could not start auto-filer."));
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-robot me-1"></i>Auto-File Unfiled';
+      return;
+    }
+    renderFiling(await res.json());
+    if (!filingPoll) filingPoll = setInterval(pollFiling, 1500);
+  });
+
+  $("spam-history").addEventListener("change", async (e) => {
+    if (!e.target.classList.contains("spam-done")) return;
+    const open = [...document.querySelectorAll("#spam-history details")].map((d) => d.open);
+    await post("/api/spam/done", {e164: e.target.dataset.e164, dest: e.target.dataset.dest, done: e.target.checked});
+    await load();
+    document.querySelectorAll("#spam-history details").forEach((d, i) => { d.open = open[i]; });
+  });
+
+  load();
+})();
+</script>
+{% endblock %}

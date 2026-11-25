@@ -29,8 +29,10 @@
   - Add an optional `tools: true` flag to `/api/chat`: rejected — same endpoint carrying two
     very different behaviors is harder to reason about and test.
 - Consequences:
-  - Two Ollama-calling code paths exist (`_call_ollama_chat` and the operator's loop). Some
-    duplication is accepted in exchange for not entangling the two features.
+  - Two feature-level code paths exist (`_call_llm_chat` and the operator's loop). They now
+    share a single backend-selecting low-level call (`_call_llm_raw`, added when GPU-model
+    auto-detection landed — see `support/local_ai/decisions.md`), so the duplication that
+    remains is at the feature layer, not the HTTP-call layer.
 - Rollback: If the split proves artificial, merge behind a single endpoint later — the UI
   contract (`messages` in, `content` + trace out) is compatible either way.
 
@@ -62,7 +64,7 @@
 ## Decision 4: Bound The Tool-Calling Loop To A Fixed Iteration Cap
 
 - Status: accepted
-- Decision: The operator loop calls Ollama, executes any requested tools, and repeats up to a
+- Decision: The operator loop calls the model, executes any requested tools, and repeats up to a
   hard cap (planned: 4 rounds) before forcing a final answer or an explicit error.
 - Why: Local models can loop on tool calls if a tool result doesn't satisfy them. An unbounded
   loop on a local GPU is a real resource/hang risk, not just a cost concern.
@@ -90,7 +92,7 @@
 
 ## Decision 6: Withhold The System Message Until A Tool Result Exists
 
-- Status: accepted
+- Status: accepted; the Granite-specific reason no longer applies (see Decision 7), but the behavior is kept
 - Decision: The operator loop does not send any `role: "system"` message on the first call to
   Ollama (the one offered `tools` with no prior tool result). A system message is only added
   once the transcript already contains a `role: "tool"` message.
@@ -117,3 +119,24 @@
 - Rollback: If future Ollama/Granite versions fix this interaction, the guard (`has_tool_result`
   check in `app.py::_run_operator`) can be removed and the system message restored to every
   round.
+
+## Decision 7: Run The Operator On Bonsai 2 27B Via llama.cpp
+
+- Status: accepted (2026-11-24)
+- Decision: The operator loop now talks to Bonsai 2 27B through llama.cpp's OpenAI-compatible
+  `/v1/chat/completions` API at `http://127.0.0.1:1080`. Granite 3.3 via Ollama is retired
+  (see `support/local_ai/decisions.md` Decision 9). The Ollama code path stays only as a
+  fallback for a model that is already loaded while Bonsai is down.
+- Why: The user switched the dashboard's local model to Bonsai. Bonsai emits native
+  `tool_calls`, including when a system message is present.
+- Consequences:
+  - Decision 6's workaround is no longer required. It is kept on every backend because it is
+    harmless and keeps the first round focused on choosing a tool (see the `_run_operator`
+    docstring in `app.py`).
+  - Tool-call `arguments` now arrive as a JSON string rather than an object.
+    `_parse_tool_arguments` normalizes them to a dict, and anything that is not a JSON object
+    is returned to the model as an error result.
+  - Tool result messages now carry `tool_call_id` when the call has an `id`.
+  - Verified live on 2026-11-24 with a `get_current_datetime` round trip.
+- Rollback path: Point `llm.bonsai_base_url` at another local OpenAI-compatible server. The
+  loop does not depend on Bonsai specifically.

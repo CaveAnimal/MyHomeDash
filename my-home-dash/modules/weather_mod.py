@@ -14,6 +14,7 @@ import logging
 import os
 from datetime import datetime
 from statistics import mean
+from zoneinfo import ZoneInfo
 
 import requests
 from dotenv import load_dotenv
@@ -60,6 +61,56 @@ def _hourly_icon(weathercode: int | None, is_day: int) -> str:
     if weathercode in _RAIN_CODES:
         return "rain"
     return "cloud"
+
+
+def _icon_class_for_weather_key(icon_key: str) -> str:
+    icon_map = {
+        "sun": "bi-brightness-high-fill",
+        "moon": "bi-moon-stars-fill",
+        "rain": "bi-cloud-rain-fill",
+        "cloud": "bi-cloud-fill",
+    }
+    return icon_map.get(icon_key, "bi-cloud-fill")
+
+
+def _get_open_meteo_10_day(lat: float, lon: float, units: str) -> list[dict] | None:
+    """Open-Meteo 10-day daily outlook for the next 10 days."""
+    temp_unit = "fahrenheit" if units == "imperial" else "celsius"
+    url = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}"
+        "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode"
+        f"&temperature_unit={temp_unit}&timezone=auto&forecast_days=10"
+    )
+    try:
+        r = requests.get(url, timeout=10)
+        r.raise_for_status()
+        data = r.json().get("daily", {})
+        times = data.get("time", [])
+        highs = data.get("temperature_2m_max", [])
+        lows = data.get("temperature_2m_min", [])
+        codes = data.get("weathercode", [])
+
+        forecast = []
+        for idx, time_str in enumerate(times):
+            if idx >= len(highs) or idx >= len(lows) or idx >= len(codes):
+                continue
+            dt = datetime.fromisoformat(time_str)
+            icon_key = _hourly_icon(codes[idx], 1)
+            forecast.append({
+                "date": time_str,
+                "day_label": dt.strftime("%a"),
+                "high": round(highs[idx]),
+                "low": round(lows[idx]),
+                "precip_pct": int(data.get("precipitation_probability_max", [0])[idx]) if idx < len(data.get("precipitation_probability_max", [])) else None,
+                "condition": _wmo_condition(codes[idx]),
+                "icon": icon_key,
+                "icon_class": _icon_class_for_weather_key(icon_key),
+            })
+        return forecast
+    except Exception as exc:
+        log.warning("Open-Meteo 10-day forecast failed: %s", exc)
+        return None
 
 
 def _get_open_meteo_hourly(lat: float, lon: float, units: str, hours: int = 24) -> list[dict]:
@@ -211,6 +262,7 @@ def fetch() -> dict:
     condition = results[0]["condition"]
 
     unit_sym = "°F" if units == "imperial" else "°C"
+    timezone_name = cfg.get("timezone", "America/New_York")
     return {
         "high": avg_high,
         "low": avg_low,
@@ -220,4 +272,6 @@ def fetch() -> dict:
         "sources": results,
         "source_count": len(results),
         "hourly": _get_open_meteo_hourly(lat, lon, units),
+        "forecast_10d": _get_open_meteo_10_day(lat, lon, units) or [],
+        "forecast_date": datetime.now(ZoneInfo(timezone_name)).date().isoformat(),
     }

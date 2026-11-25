@@ -1,10 +1,10 @@
 # Internet Access Decisions
 
-This document records the key design choices for enabling internet-backed retrieval in the Local AI chat while keeping Granite 3.3 local.
+This document records the key design choices for enabling internet-backed retrieval in the Local AI chat while keeping model inference local (originally Granite 3.3 via Ollama; now Bonsai 2 27B via llama.cpp, see Decision 7).
 
 ## Decision 1: Keep Model Inference Local Through Ollama
 
-- Status: accepted
+- Status: accepted; the runtime and model were changed by Decision 7, but the local-only principle stands
 - Decision: Granite 3.3 remains the answering model and continues to run through the local Ollama runtime.
 - Why: The goal is to augment local inference with internet-sourced context, not replace local inference with a hosted LLM.
 - Alternatives considered:
@@ -79,3 +79,14 @@ This document records the key design choices for enabling internet-backed retrie
   - Retrieval errors need explicit handling and messaging.
   - The model may need a fallback prompt path when external context is unavailable.
 - Rollback path: Tighten or relax the fallback behavior later based on UX feedback.
+
+## Decision 7: The Answering Model Is Bonsai 2 27B Via llama.cpp
+
+- Status: accepted (2026-11-24). Amends Decision 1's runtime; the local-only principle is unchanged.
+- Decision: Retrieval-augmented chat is answered by Bonsai 2 27B, served by PrismML's llama.cpp fork at `http://127.0.0.1:1080` through the OpenAI-compatible `/v1/chat/completions` API. Granite 3.3 via Ollama is retired (see `support/local_ai/decisions.md` Decision 9).
+- Why: The user switched the dashboard's local model to Bonsai.
+- Consequences:
+  - Retrieved context must be merged into the single leading system message, because Bonsai's chat template rejects more than one system message.
+  - The retrieval layer itself is model-independent and did not change.
+  - Re-verified live on 2026-11-24 (see `todo.md`).
+- Rollback path: Point `llm.bonsai_base_url` at another local OpenAI-compatible server; retrieval does not depend on the model.

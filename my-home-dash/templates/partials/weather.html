@@ -1,5 +1,6 @@
-{# Weather partial — rendered as a compact summary bar #}
+{# Weather partial — rendered as a compact summary bar with a toggleable 10-day outlook #}
 {% set d = data %}
+{% set forecast_10d = d.get('forecast_10d') or [] %}
 <div class="card mhd-card mhd-weather-bar">
   <div class="card-body py-2">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 position-relative mhd-weather-top-row">
@@ -13,37 +14,74 @@
       {% elif d.get('status') == 'pending' %}
         <span class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</span>
       {% else %}
-        <div class="d-flex align-items-center gap-4 flex-wrap">
+        <div class="mhd-weather-summary-header d-flex align-items-center gap-3 flex-wrap flex-grow-1">
           <span class="fs-5 fw-bold">{{ d.high }}{{ d.units }} <span class="text-muted fw-normal fs-6">/ {{ d.low }}{{ d.units }}</span></span>
           <span class="text-muted">{{ d.condition }}</span>
           {% if d.precip_pct is not none %}
           <span class="text-info"><i class="bi bi-droplet me-1"></i>{{ d.precip_pct }}% precip</span>
           {% endif %}
         </div>
+
+        <div class="d-flex align-items-center gap-2 ms-auto mhd-weather-controls">
+          <div class="btn-group btn-group-sm" role="group" aria-label="Weather view selector">
+            <button type="button" class="btn btn-sm btn-outline-primary active mhd-weather-view-switch" data-weather-view="summary" aria-pressed="true">Now</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary mhd-weather-view-switch" data-weather-view="forecast" aria-pressed="false">10 Day</button>
+          </div>
+
+          <button class="btn btn-outline-secondary btn-sm"
+                  hx-post="/api/refresh/weather"
+                  hx-target="#section-weather"
+                  hx-swap="innerHTML"
+                  hx-indicator="#weather-spin">
+            <i class="bi bi-arrow-clockwise"></i>
+            <span id="weather-spin" class="htmx-indicator spinner-border spinner-border-sm ms-1"></span>
+          </button>
+        </div>
       {% endif %}
 
-      <span class="small text-muted mhd-weather-midnight-label d-none">
-        <span class="mhd-weather-midnight-before"></span> | <span class="mhd-weather-midnight-after"></span>
-      </span>
-
-      <button class="btn btn-outline-secondary btn-sm ms-auto"
-              hx-post="/api/refresh/weather"
-              hx-target="#section-weather"
-              hx-swap="innerHTML"
-              hx-indicator="#weather-spin">
-        <i class="bi bi-arrow-clockwise"></i>
-        <span id="weather-spin" class="htmx-indicator spinner-border spinner-border-sm ms-1"></span>
-      </button>
     </div>
 
-    {% if d.hourly %}
-    <div class="mhd-weather-hourly mt-2">
-      <canvas class="mhd-weather-hourly-canvas"
-              data-hourly='{{ d.hourly | tojson }}'
-              data-units="{{ d.units }}"
-              role="img"
-              aria-label="Predicted temperature for the next 24 hours"></canvas>
+    {% if not d.get('error') and d.get('status') != 'pending' %}
+    <div class="mhd-weather-summary-view mt-3" style="height: 173px;">
+      {% if d.hourly %}
+      <div class="position-relative h-100">
+        <span class="small text-muted mhd-weather-midnight-label d-none">
+          <span class="mhd-weather-midnight-before"></span> | <span class="mhd-weather-midnight-after"></span>
+        </span>
+        <div class="mhd-weather-hourly" style="height: 173px;">
+          <canvas class="mhd-weather-hourly-canvas"
+                  data-hourly='{{ d.hourly | tojson }}'
+                  data-units="{{ d.units }}"
+                  role="img"
+                  aria-label="Predicted temperature for the next 24 hours"></canvas>
+        </div>
+      </div>
+      {% endif %}
     </div>
     {% endif %}
+
+    {% if forecast_10d %}
+    <div class="mhd-weather-forecast-view mt-3 d-none" style="height: 173px;">
+      <div class="d-flex flex-row flex-nowrap gap-2 justify-content-between align-items-stretch h-100">
+        {% for day in forecast_10d %}
+        <div class="flex-fill min-w-0" style="min-width: 56px; max-width: 96px;">
+          <div class="border rounded p-2 h-100 bg-light-subtle text-center d-flex flex-column justify-content-between">
+            <div class="fw-semibold small text-muted">{{ day.day_label }}</div>
+            <div class="text-center my-1">
+              <i class="{{ day.icon_class }} fs-5 text-primary"></i>
+            </div>
+            <div class="fw-bold small">{{ day.high }}{{ d.units }}</div>
+            <div class="text-muted small">{{ day.low }}{{ d.units }}</div>
+            <div class="text-muted small text-truncate" title="{{ day.condition }}">{{ day.condition }}</div>
+            {% if day.precip_pct is not none %}
+            <div class="text-info small mt-1"><i class="bi bi-cloud-rain me-1"></i>{{ day.precip_pct }}%</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
   </div>
 </div>

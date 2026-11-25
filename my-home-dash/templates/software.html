@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}{{ sw_title }} alternatives | My Home Dash{% endblock %}
+
+{% block content %}
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-warning-emphasis mb-2">Software</div>
+        <h1 class="h3 mb-2">{{ sw_title }}-like products</h1>
+        <p class="mb-0 text-body-secondary">{{ sw_blurb }}{% if sw_updated %} Last fetched {{ sw_updated }}.{% endif %}</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+{% if not sw_items %}
+<div class="alert alert-info">No downloads yet. Run <code>python scripts/fetch_alternatives.py</code> from the project folder.</div>
+{% else %}
+<div class="row g-3">
+  {% for it in sw_items %}
+  <div class="col-md-6 col-xl-4">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4 d-flex flex-column">
+        <h2 class="h5 mb-1">{{ it.name }}</h2>
+        <div class="small text-body-secondary mb-2">Alternative to {{ it.replaces }}{% if it.version %} · {{ it.version }}{% endif %}</div>
+        <p class="mb-3">{{ it.description }}</p>
+        <div class="mt-auto d-flex flex-wrap gap-2">
+          {% if it.status == 'downloaded' %}
+          <a class="btn btn-primary btn-sm" href="{{ url_for('download_file', filename=it.file) }}">
+            <i class="bi bi-download me-1"></i>Download ({{ '%.0f'|format(it.size / 1048576) }} MB)
+          </a>
+          {% else %}
+          <span class="badge text-bg-secondary align-self-center">{{ 'No Windows asset on GitHub' if it.status == 'no-windows-asset' else it.status }}</span>
+          {% endif %}
+          <a class="btn btn-outline-secondary btn-sm" href="{{ it.repo_url }}" target="_blank" rel="noopener">
+            <i class="bi bi-github me-1"></i>Repo
+          </a>
+          <a class="btn btn-outline-secondary btn-sm" href="{{ it.releases_url }}" target="_blank" rel="noopener">Releases</a>
+        </div>
+      </div>
+    </section>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

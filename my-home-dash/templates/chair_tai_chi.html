@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Chair Tai Chi | My Home Dash{% endblock %}
+
+{% block content %}
+{% set img = 'img/taichi/' %}
+<section class="card mhd-card border-0 mhd-page-hero mb-3">
+  <div class="card-body p-4 p-lg-5">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3">
+      <div>
+        <div class="text-uppercase small fw-semibold text-success-emphasis mb-2">Wellness</div>
+        <h1 class="h3 mb-2">Free chair tai chi.</h1>
+        <p class="mb-0 text-body-secondary">Gentle, low-impact movement you can do seated: balance, flexibility, and calm in 10-30 minutes a day.</p>
+      </div>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}">
+        <i class="bi bi-house-door me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="alert alert-info d-flex gap-2 mb-3" role="alert">
+  <i class="bi bi-heart-pulse-fill"></i>
+  <div>Check with your doctor before starting, especially with balance problems, recent surgery, or heart conditions. Move within a pain-free range; stop if you feel dizzy or sharp pain.</div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <figure class="card mhd-card h-100 mb-0 overflow-hidden">
+      <img src="{{ url_for('static', filename=img ~ 'seated.jpg') }}" class="card-img-top" alt="Person practicing tai chi while seated" loading="lazy">
+      <figcaption class="card-body small text-body-secondary">Seated tai chi. Photo: Jquarta, <a href="https://commons.wikimedia.org/wiki/File:Seated_Tai_Chi.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY-SA 4.0.</figcaption>
+    </figure>
+  </div>
+  <div class="col-md-4">
+    <figure class="card mhd-card h-100 mb-0 overflow-hidden">
+      <img src="{{ url_for('static', filename=img ~ 'young-and-old.jpg') }}" class="card-img-top" alt="Young and old people practicing tai chi together" loading="lazy">
+      <figcaption class="card-body small text-body-secondary">Tai chi for all ages. <a href="https://commons.wikimedia.org/wiki/File:Tai_Chi_Young_and_Old.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY 2.0.</figcaption>
+    </figure>
+  </div>
+  <div class="col-md-4">
+    <figure class="card mhd-card h-100 mb-0 overflow-hidden">
+      <img src="{{ url_for('static', filename=img ~ 'morning.jpg') }}" class="card-img-top" alt="Morning tai chi practice outdoors" loading="lazy">
+      <figcaption class="card-body small text-body-secondary">Morning practice. <a href="https://commons.wikimedia.org/wiki/File:Morning_Tai_Chi.jpg" target="_blank" rel="noopener">Wikimedia Commons</a>, CC BY-SA 4.0.</figcaption>
+    </figure>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-lg-6">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-chair me-2"></i>Setup</h2>
+        <ul class="mb-0">
+          <li>Sturdy chair <strong>without arms</strong> and without wheels, on a non-slip floor.</li>
+          <li>Sit tall near the front edge, feet flat and hip-width apart, knees over ankles.</li>
+          <li>Shoulders relaxed, chin slightly tucked, as if a string lifts the crown of your head.</li>
+          <li>Breathe through the nose: slow in, slower out. Move at the speed of your breath.</li>
+          <li>Keep the knees soft and the movements smooth, never forced.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <div class="col-lg-6">
+    <section class="card mhd-card h-100">
+      <div class="card-body p-4">
+        <h2 class="h5 mb-3"><i class="bi bi-person-arms-up me-2"></i>Core seated movements</h2>
+        <ol class="mb-0">
+          <li class="mb-1"><strong>Commencement:</strong> raise both arms to shoulder height, then lower with a breath out.</li>
+          <li class="mb-1"><strong>Holding the ball:</strong> hands circle in front of the chest as if holding a large ball.</li>
+          <li class="mb-1"><strong>Wave hands like clouds:</strong> shift weight slightly side to side, hands drifting across the body.</li>
+          <li class="mb-1"><strong>Parting the wild horse's mane:</strong> one hand rises, one presses down, alternating sides.</li>
+          <li class="mb-1"><strong>Brush knee:</strong> sweep one hand past the knee while the other pushes forward.</li>
+          <li class="mb-1"><strong>Lift the sky:</strong> interlace fingers, palms up overhead, stretch tall.</li>
+          <li><strong>Closing:</strong> hands rest on thighs, eyes closed for three slow breaths.</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <h2 class="h5 mb-0"><i class="bi bi-calendar-week me-2"></i>Weekday workout schedule</h2>
+      <span class="small text-body-secondary" id="tc-progress"></span>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-2">
+        <thead>
+          <tr><th style="width:3rem">Done</th><th>Day</th><th>Focus</th><th>Routine</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+          {% for day, focus, routine, mins in [
+            ('Monday', 'Gentle start', 'Breathing and warm-up (neck rolls, shoulder circles), Commencement, Holding the ball x10, Closing', '15 min'),
+            ('Tuesday', 'Upper body flow', 'Warm-up, Wave hands like clouds x16, Parting the wild horse\'s mane x8 each side, Lift the sky x8', '20 min'),
+            ('Wednesday', 'Mobility and legs', 'Warm-up, seated marching x30 sec, ankle circles, Brush knee x8 each side, Closing breaths', '20 min'),
+            ('Thursday', 'Balance and calm', 'Warm-up, Holding the ball, slow weight shifts side to side x10, Wave hands like clouds, 3 minutes quiet breathing', '20 min'),
+            ('Friday', 'Full flow', 'Full sequence from the list above twice through, slowly, finishing with Closing', '25-30 min')
+          ] %}
+          <tr>
+            <td><input class="form-check-input tc-check" type="checkbox" data-key="tc-{{ day|lower }}" aria-label="{{ day }} done"></td>
+            <td class="fw-semibold">{{ day }}</td>
+            <td>{{ focus }}</td>
+            <td>{{ routine }}</td>
+            <td class="text-nowrap">{{ mins }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-between flex-wrap gap-2">
+      <p class="small text-body-secondary mb-0">Weekends: rest, or a relaxed 10-minute walk or Closing sequence. Progress: add 5 minutes or a second round every two weeks.</p>
+      <button type="button" class="btn btn-outline-secondary btn-sm" id="tc-reset"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset week</button>
+    </div>
+  </div>
+</section>
+
+<section class="card mhd-card mb-3">
+  <div class="card-body p-4">
+    <h2 class="h5 mb-3"><i class="bi bi-play-circle me-2"></i>Free videos and programs</h2>
+    <ul class="mb-2">
+      <li><a href="https://www.youtube.com/results?search_query=chair+tai+chi+for+seniors" target="_blank" rel="noopener">YouTube: chair tai chi for seniors</a></li>
+      <li><a href="https://www.youtube.com/results?search_query=seated+tai+chi+beginners+20+minutes" target="_blank" rel="noopener">YouTube: seated tai chi for beginners</a></li>
+      <li><a href="https://taichiforhealthinstitute.org/" target="_blank" rel="noopener">Tai Chi for Health Institute (Dr. Paul Lam)</a></li>
+      <li><a href="https://www.health.harvard.edu/staying-healthy/the-health-benefits-of-tai-chi" target="_blank" rel="noopener">Harvard Health: benefits of tai chi</a></li>
+    </ul>
+    <p class="small text-body-secondary mb-0">Many public libraries and senior centers also run free seated tai chi classes; call and ask.</p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var boxes = document.querySelectorAll(".tc-check");
+  var label = document.getElementById("tc-progress");
+  function update() {
+    var n = 0;
+    boxes.forEach(function (b) { if (b.checked) n++; });
+    label.textContent = n + " of " + boxes.length + " days done this week";
+  }
+  boxes.forEach(function (b) {
+    var key = "mhd-" + b.dataset.key;
+    try { b.checked = localStorage.getItem(key) === "1"; } catch (e) {}
+    b.addEventListener("change", function () {
+      try { localStorage.setItem(key, b.checked ? "1" : "0"); } catch (e) {}
+      update();
+    });
+  });
+  document.getElementById("tc-reset").addEventListener("click", function () {
+    boxes.forEach(function (b) {
+      b.checked = false;
+      try { localStorage.removeItem("mhd-" + b.dataset.key); } catch (e) {}
+    });
+    update();
+  });
+  update();
+})();
+</script>
+{% endblock %}

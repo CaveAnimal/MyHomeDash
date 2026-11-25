@@ -1,5 +1,7 @@
 {# Calendar partial #}
 {% set d = data %}
+{% set cal_view = d.get('view', 'day') %}
+{% set cal_anchor = d.get('anchor_iso', '') %}
 <div class="card mhd-card h-100">
   <div class="card-header d-flex align-items-center justify-content-between">
     <span>
@@ -9,18 +11,178 @@
         <span class="badge bg-primary ms-2">{{ d.count }}</span>
       {% endif %}
     </span>
-    <button class="btn btn-outline-secondary btn-sm"
-            hx-post="/api/refresh/calendar"
-            hx-target="#section-calendar"
-            hx-swap="innerHTML">
-      <i class="bi bi-arrow-clockwise"></i>
-    </button>
+    <span class="d-flex gap-1">
+      {% if cfg.get('calendar', {}).get('source', 'graph') == 'graph' %}
+      <button type="button" class="btn btn-outline-primary btn-sm mhd-calendar-form-toggle"
+              aria-controls="mhd-calendar-form" aria-expanded="false" title="Add calendar event">
+        <i class="bi bi-plus-lg"></i>
+      </button>
+      {% endif %}
+      <button type="button" class="btn btn-outline-secondary btn-sm"
+              hx-get="/api/calendar/view?view={{ cal_view }}&anchor={{ cal_anchor }}"
+              hx-target="#section-calendar"
+              hx-swap="innerHTML"
+              title="Refresh calendar">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </span>
   </div>
   <div class="card-body overflow-auto mhd-section-body">
+
+    {% if d.get('status') != 'pending' %}
+    <div class="mhd-cal-toolbar d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2"
+         data-cal-view="{{ cal_view }}" data-cal-anchor="{{ cal_anchor }}">
+      <div class="btn-group btn-group-sm" role="group" aria-label="Calendar view selector">
+        {% for v in ['day', 'week', 'month'] %}
+        <button type="button"
+                class="btn btn-sm {% if cal_view == v %}btn-primary active{% else %}btn-outline-primary{% endif %} mhd-cal-view-btn"
+                hx-get="/api/calendar/view?view={{ v }}&anchor={{ cal_anchor }}"
+                hx-target="#section-calendar" hx-swap="innerHTML"
+                aria-pressed="{{ 'true' if cal_view == v else 'false' }}">{{ v|capitalize }}</button>
+        {% endfor %}
+      </div>
+      <div class="btn-group btn-group-sm" role="group" aria-label="Calendar navigation">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                hx-get="/api/calendar/view?view={{ cal_view }}&anchor={{ d.get('prev_iso', '') }}"
+                hx-target="#section-calendar" hx-swap="innerHTML" title="Previous {{ cal_view }}">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                hx-get="/api/calendar/view?view={{ cal_view }}&anchor={{ d.get('today_iso', '') }}"
+                hx-target="#section-calendar" hx-swap="innerHTML" title="Jump to today">Today</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                hx-get="/api/calendar/view?view={{ cal_view }}&anchor={{ d.get('next_iso', '') }}"
+                hx-target="#section-calendar" hx-swap="innerHTML" title="Next {{ cal_view }}">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+    <div class="fw-semibold text-body-secondary small mb-2">{{ d.get('range_label', '') }}</div>
+    {% endif %}
+
+    {% if cfg.get('calendar', {}).get('source', 'graph') == 'graph' %}
+    <form id="mhd-calendar-form" class="d-none border-bottom border-secondary-subtle pb-3 mb-3" novalidate>
+      <div class="mb-2">
+        <label class="form-label small mb-1" for="mhd-calendar-subject">Title</label>
+        <input id="mhd-calendar-subject" name="subject" class="form-control form-control-sm"
+               maxlength="255" required autocomplete="off" placeholder="Dentist appointment">
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-7">
+          <label class="form-label small mb-1" for="mhd-calendar-date">Date</label>
+          <input id="mhd-calendar-date" name="date" type="date" class="form-control form-control-sm"
+                 value="{{ cal_anchor or d.get('today_iso', '') }}" required>
+        </div>
+        <div class="col-5 d-flex align-items-end pb-1">
+          <div class="form-check">
+            <input id="mhd-calendar-all-day" name="all_day" type="checkbox" class="form-check-input" checked>
+            <label class="form-check-label small" for="mhd-calendar-all-day">All day</label>
+          </div>
+        </div>
+      </div>
+      <div class="row g-2 mb-2 d-none mhd-calendar-time-fields">
+        <div class="col-6">
+          <label class="form-label small mb-1" for="mhd-calendar-start-time">Start</label>
+          <input id="mhd-calendar-start-time" name="start_time" type="time"
+                 class="form-control form-control-sm" value="09:00">
+        </div>
+        <div class="col-6">
+          <label class="form-label small mb-1" for="mhd-calendar-end-time">End</label>
+          <input id="mhd-calendar-end-time" name="end_time" type="time"
+                 class="form-control form-control-sm" value="10:00">
+        </div>
+      </div>
+      <div class="mb-2">
+        <label class="form-label small mb-1" for="mhd-calendar-location">Location</label>
+        <input id="mhd-calendar-location" name="location" class="form-control form-control-sm"
+               maxlength="255" autocomplete="off" placeholder="Optional">
+      </div>
+      <div class="mb-2">
+        <label class="form-label small mb-1" for="mhd-calendar-notes">Notes</label>
+        <textarea id="mhd-calendar-notes" name="notes" class="form-control form-control-sm"
+                  maxlength="2000" rows="2" placeholder="Optional"></textarea>
+      </div>
+      <div class="mhd-calendar-form-status alert py-1 px-2 small d-none" role="alert"></div>
+      <div class="d-flex justify-content-end gap-2">
+        <button type="button" class="btn btn-outline-secondary btn-sm mhd-calendar-form-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i class="bi bi-calendar-plus me-1"></i>Add event
+        </button>
+      </div>
+    </form>
+    {% endif %}
+
     {% if d.get('error') %}
       <div class="alert alert-warning py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>{{ d.error }}</div>
     {% elif d.get('status') == 'pending' %}
       <p class="text-muted small"><i class="bi bi-hourglass me-1"></i>Loading…</p>
+
+    {% elif cal_view == 'month' %}
+      <div class="mhd-cal-grid mhd-cal-grid-head-row">
+        {% for wd in d.weekday_headers %}
+        <div class="mhd-cal-grid-head">{{ wd }}</div>
+        {% endfor %}
+      </div>
+      {% for week in d.weeks %}
+      <div class="mhd-cal-grid">
+        {% for cell in week %}
+        <div class="mhd-cal-cell{% if not cell.in_month %} mhd-cal-out{% endif %}{% if cell.is_today %} mhd-cal-today{% endif %}"
+             role="button" tabindex="0"
+             hx-get="/api/calendar/view?view=day&anchor={{ cell.iso }}"
+             hx-target="#section-calendar" hx-swap="innerHTML"
+             hx-trigger="click, keyup[key=='Enter']"
+             title="{{ cell.date_label }}{% if cell.count %} — {{ cell.count }} event(s){% endif %}">
+          <span class="mhd-cal-daynum">{{ cell.day_num }}</span>
+          {% for ev in cell.events[:3] %}
+          <span class="mhd-cal-ev{% if ev.is_all_day %} mhd-cal-ev-allday{% endif %}{% if ev.upcoming %} mhd-cal-ev-soon{% endif %}">
+            {%- if not ev.is_all_day and ev.start %}<span class="mhd-cal-ev-time">{{ ev.start }}</span> {% endif -%}
+            {{ ev.subject }}
+          </span>
+          {% endfor %}
+          {% if cell.count > 3 %}
+          <span class="mhd-cal-more">+{{ cell.count - 3 }} more</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+    {% elif cal_view == 'week' %}
+      {% for cell in d.days %}
+      <div class="mhd-cal-weekday-group pb-2 mb-2 border-bottom border-secondary-subtle">
+        <div class="d-flex align-items-center justify-content-between mhd-cal-weekday-head{% if cell.is_today %} mhd-cal-today{% endif %}">
+          <a href="#" class="text-decoration-none fw-semibold"
+             hx-get="/api/calendar/view?view=day&anchor={{ cell.iso }}"
+             hx-target="#section-calendar" hx-swap="innerHTML">
+            {{ cell.weekday_label }} {{ cell.day_num }}
+          </a>
+          {% if cell.count %}<span class="badge bg-primary-subtle text-primary-emphasis">{{ cell.count }}</span>{% endif %}
+        </div>
+        {% if cell.events %}
+        <ul class="list-unstyled mb-0 mt-1">
+          {% for ev in cell.events %}
+          <li class="mhd-event-item {% if ev.upcoming %}mhd-upcoming{% endif %} mb-1">
+            {% if ev.upcoming %}<span class="badge bg-warning text-dark me-1">Soon</span>{% endif %}
+            {% if ev.is_all_day %}<span class="badge bg-secondary me-1">All day</span>{% endif %}
+            <span class="fw-semibold">{{ ev.subject }}</span>
+            <small class="text-muted d-block">
+              {% if not ev.is_all_day %}{{ ev.start }} – {{ ev.end }}{% endif %}
+              {% if ev.location %} · <i class="bi bi-geo-alt"></i> {{ ev.location }}{% endif %}
+            </small>
+            {% if ev.has_link %}
+            <a href="{{ ev.online_url }}" target="_blank" class="btn btn-link btn-sm p-0">
+              <i class="bi bi-camera-video"></i> Join
+            </a>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-muted small mt-1">No events</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
     {% elif d.get('events') %}
       <ul class="list-unstyled mb-0">
         {% for ev in d.events %}
@@ -48,7 +210,7 @@
         {% endfor %}
       </ul>
     {% else %}
-      <p class="text-muted small mb-0"><i class="bi bi-check-circle me-1 text-success"></i>No meetings today.</p>
+      <p class="text-muted small mb-0"><i class="bi bi-check-circle me-1 text-success"></i>No events {{ 'today' if cal_view == 'day' else 'in this ' + cal_view }}.</p>
     {% endif %}
   </div>
 </div>

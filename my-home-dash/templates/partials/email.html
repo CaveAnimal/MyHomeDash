@@ -34,10 +34,6 @@
           {% endif %}
         </div>
         {% if acc.id == 'home_outlook' and not acc.get('error') %}
-          <div class="btn-group btn-group-sm mb-2" role="group" aria-label="Home Outlook folder">
-            <button type="button" class="btn btn-outline-secondary active mhd-email-folder-btn" data-folder="inbox">Inbox</button>
-            <button type="button" class="btn btn-outline-secondary mhd-email-folder-btn" data-folder="junk">Junk</button>
-          </div>
           <div id="home-outlook-messages" class="ps-2">
             <p class="text-muted small mb-0"><i class="bi bi-hourglass me-1"></i>Loading…</p>
           </div>
@@ -48,7 +44,11 @@
           <ul class="list-unstyled mb-0 ps-2">
             {% for msg in acc.subjects %}
             <li class="small text-muted mb-1 text-truncate" title="{{ msg.subject }}">
-              <i class="bi bi-dot text-secondary"></i>
+              {% if msg.get('category') %}
+                <span class="badge {{ {'urgent': 'bg-danger', 'action_needed': 'bg-warning text-dark'}.get(msg.category, 'bg-secondary') }} me-1">{{ msg.category | replace('_', ' ') }}</span>
+              {% else %}
+                <i class="bi bi-dot text-secondary"></i>
+              {% endif %}
               <span class="text-body-secondary">{{ msg.from | truncate(20, true) }}</span>
               · {{ msg.subject | truncate(40, true) }}
             </li>

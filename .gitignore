@@ -5,5 +5,8 @@ __pycache__/
 *.py[cod]
 *.log
 logs/
+my-home-dash/data/outlook_folder_structure.json
+my-home-dash/data/outlook_folder_structure.tmp
+my-home-dash/data/junk_move_audit.csv
 .DS_Store
-Thumbs.db
+Thumbs.dbmy-home-dash/data/downloads/

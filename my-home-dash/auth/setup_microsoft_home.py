@@ -1,5 +1,5 @@
 """
-One-time setup: authenticate your HOME Outlook.com account (personal email only).
+One-time setup: authenticate your HOME Outlook.com account (email + calendar).
 
 Run this script once:
     python auth/setup_microsoft_home.py
@@ -17,8 +17,10 @@ import sys
 import os
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
+for stream in (sys.stdout, sys.stderr):
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure:
+        reconfigure(encoding="utf-8")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -29,10 +31,11 @@ load_dotenv()
 
 CLIENT_ID = os.getenv("MICROSOFT_HOME_CLIENT_ID", "")
 AUTHORITY = "https://login.microsoftonline.com/consumers"
-TOKEN_PATH = Path("auth/tokens/msal_home.json")
+TOKEN_PATH = Path(__file__).resolve().parent / "tokens" / "msal_home.json"
 SCOPES = [
     "https://graph.microsoft.com/Mail.ReadWrite",
     "https://graph.microsoft.com/MailboxSettings.ReadWrite",
+    "https://graph.microsoft.com/Calendars.ReadWrite",
 ]
 
 
